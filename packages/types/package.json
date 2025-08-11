@@ -1,0 +1,21 @@
+{
+  "name": "@repo/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types",
+  "main": "types.ts",
+  "module": "types.ts",
+  "types": "types.ts",
+  "scripts": {
+    "dev": "echo \"No dev script needed\"",
+    "build": "echo \"No build script needed\"",
+    "lint": "echo \"No lint script needed\"",
+    "check-types": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

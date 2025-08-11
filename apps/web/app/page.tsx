@@ -1,102 +1,125 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+"use client";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import LoginForm from "@/components/auth/LoginForm";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { user, isAuthenticated, isLoading } = useAuthStore();
+  const router = useRouter();
+  const [hasRedirected, setHasRedirected] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    console.log('useEffect triggered - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user?.email, 'hasRedirected:', hasRedirected);
+
+    // Reset redirect flag when authentication state changes
+    if (isLoading) {
+      setIsCheckingAuth(true);
+      return;
+    }
+
+    setIsCheckingAuth(false);
+
+    // Only proceed with redirect logic if we have a user and haven't redirected yet
+    if (isAuthenticated && user && !hasRedirected) {
+      console.log('Authentication check - User:', user.email, 'Role:', user.role, 'Onboarding completed:', user.onboarding_completed);
+
+      // Check current path to prevent unnecessary redirects
+      const currentPath = window.location.pathname;
+      console.log('Current path:', currentPath);
+
+      // Determine target path based on user role and onboarding status
+      let targetPath = '';
+
+      if (user.role === "admin" || user.role === "sub-admin") {
+        // Admin/Sub-admin users
+        if (!user.onboarding_completed) {
+          targetPath = '/onboarding';
+          console.log('Target: onboarding - onboarding not completed');
+        } else {
+          targetPath = '/admin';
+          console.log('Target: admin dashboard - onboarding completed');
+        }
+      } else if (user.role === "teacher") {
+        targetPath = '/dashboard';
+        console.log('Target: teacher dashboard');
+      } else if (user.role === "student") {
+        targetPath = '/dashboard';
+        console.log('Target: student dashboard');
+      } else {
+        console.log('Unknown user role:', user.role, '- staying on login page');
+        return; // Don't redirect for unknown roles
+      }
+
+      // Only redirect if we're not already on the target path
+      if (currentPath !== targetPath) {
+        console.log(`Redirecting from ${currentPath} to ${targetPath}`);
+        setHasRedirected(true);
+
+        // Use replace instead of push to prevent back button issues
+        router.replace(targetPath);
+      } else {
+        console.log(`Already on target path ${targetPath}, no redirect needed`);
+        setHasRedirected(true);
+      }
+    }
+
+    // Reset redirect flag if user becomes unauthenticated
+    if (!isAuthenticated && hasRedirected) {
+      console.log('User became unauthenticated - resetting redirect flag');
+      setHasRedirected(false);
+    }
+  }, [isAuthenticated, user, isLoading, router, hasRedirected]);
+
+  // Show loading state while checking authentication
+  if (isLoading || isCheckingAuth) {
+    console.log('Showing loading state - isLoading:', isLoading, 'isCheckingAuth:', isCheckingAuth);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Checking authentication...</p>
+          <p className="text-gray-500 text-sm mt-2">Please wait while we verify your session</p>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
-      </footer>
-    </div>
-  );
+      </div>
+    );
+  }
+
+  // Show login form for unauthenticated users
+  if (!isAuthenticated) {
+    console.log('User not authenticated - showing login form');
+    return <LoginForm />;
+  }
+
+  // If authenticated but no user data yet, show loading
+  if (isAuthenticated && !user) {
+    console.log('Authenticated but no user data - showing loading');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading user profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we have user and are authenticated, show loading while redirect happens
+  if (isAuthenticated && user && !hasRedirected) {
+    console.log('Authenticated with user data, preparing redirect...');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback: show login form (this should rarely happen)
+  console.log('Fallback case - showing login form. State:', { isAuthenticated, user: !!user, hasRedirected });
+  return <LoginForm />;
 }
