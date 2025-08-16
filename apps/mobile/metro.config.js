@@ -6,6 +6,14 @@ const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro
 const config = getDefaultConfig(__dirname);
 config.resolver.unstable_enablePackageExports = false;
 
+// Remove polyfills temporarily to avoid setGlobalHandler error
+// config.serializer = {
+//   ...config.serializer,
+//   getPolyfills: () => [
+//     require.resolve('./redis-polyfills.js'),
+//   ],
+// };
+
 // Add production optimization
 config.transformer.minifierConfig = {
   compress: {

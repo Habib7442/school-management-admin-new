@@ -93,9 +93,9 @@ export default function LoginForm() {
                 router.push('/admin')
               }
             } else if (currentUser.role === 'teacher') {
-              router.push('/teacher-dashboard')
+              router.push('/dashboard')
             } else if (currentUser.role === 'student') {
-              router.push('/student-dashboard')
+              router.push('/student')
             } else {
               router.push('/dashboard')
             }

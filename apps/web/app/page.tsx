@@ -30,6 +30,14 @@ export default function Home() {
       const currentPath = window.location.pathname;
       console.log('Current path:', currentPath);
 
+      // Only redirect if we're on the root page ("/")
+      // This prevents redirecting users away from specific admin pages on refresh
+      if (currentPath !== '/') {
+        console.log(`User is on ${currentPath}, not root page - no redirect needed`);
+        setHasRedirected(true);
+        return;
+      }
+
       // Determine target path based on user role and onboarding status
       let targetPath = '';
 
@@ -46,7 +54,7 @@ export default function Home() {
         targetPath = '/dashboard';
         console.log('Target: teacher dashboard');
       } else if (user.role === "student") {
-        targetPath = '/dashboard';
+        targetPath = '/student';
         console.log('Target: student dashboard');
       } else {
         console.log('Unknown user role:', user.role, '- staying on login page');

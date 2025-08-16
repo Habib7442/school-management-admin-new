@@ -32,6 +32,24 @@ const sidebarItems = [
     permission: { resource: 'users', action: 'read' }
   },
   {
+    name: 'Student Management',
+    href: '/admin/students',
+    icon: '🎓',
+    permission: { resource: 'students', action: 'read' }
+  },
+  {
+    name: 'Attendance Management',
+    href: '/admin/attendance',
+    icon: '📋',
+    permission: { resource: 'attendance', action: 'read' }
+  },
+  {
+    name: 'Examination Management',
+    href: '/admin/examinations',
+    icon: '📝',
+    permission: { resource: 'examinations', action: 'read' }
+  },
+  {
     name: 'Role Management',
     href: '/admin/roles',
     icon: '🔐',
@@ -42,6 +60,24 @@ const sidebarItems = [
     href: '/admin/classes',
     icon: '🏫',
     permission: { resource: 'classes', action: 'read' }
+  },
+  {
+    name: 'Timetable Management',
+    href: '/admin/timetables',
+    icon: '📅',
+    permission: { resource: 'timetables', action: 'read' }
+  },
+  {
+    name: 'Library Management',
+    href: '/admin/library',
+    icon: '📚',
+    permission: { resource: 'library', action: 'read' }
+  },
+  {
+    name: 'Fee Management',
+    href: '/admin/fees',
+    icon: '💰',
+    permission: { resource: 'fees', action: 'read' }
   },
   {
     name: 'Reports',
@@ -69,7 +105,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
 function AdminLayoutContent({ children, title }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const { user, logout, checkPermission } = useAuthStore()
+  const { user, logout, checkPermission, isLoading } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -101,11 +137,14 @@ function AdminLayoutContent({ children, title }: AdminLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {sidebarItems.map((item) => {
-            const hasPermission = checkPermission(item.permission.resource, item.permission.action)
-            const isActive = pathname === item.href
+          {isLoading ? (
+            <div className="p-4 text-center text-gray-500">Loading...</div>
+          ) : (
+            sidebarItems.map((item) => {
+              const hasPermission = checkPermission(item.permission.resource, item.permission.action)
+              const isActive = pathname === item.href
 
-            if (!hasPermission) return null
+              if (!hasPermission) return null
 
             return (
               <Link
@@ -127,7 +166,8 @@ function AdminLayoutContent({ children, title }: AdminLayoutProps) {
                 )}
               </Link>
             )
-          })}
+          })
+          )}
         </nav>
 
         {/* User Info */}
@@ -136,11 +176,11 @@ function AdminLayoutContent({ children, title }: AdminLayoutProps) {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'Unknown User'}</p>
+                  <p className="text-xs text-gray-500 capitalize">{user?.role || 'No Role'}</p>
                 </div>
               </div>
               <Button
@@ -172,7 +212,7 @@ function AdminLayoutContent({ children, title }: AdminLayoutProps) {
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">
-                Welcome back, {user.name}
+                Welcome back, {user?.name || 'User'}
               </span>
             </div>
           </div>

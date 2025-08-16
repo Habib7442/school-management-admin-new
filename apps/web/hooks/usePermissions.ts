@@ -66,6 +66,20 @@ export function usePermissions() {
       // Role permissions
       canManageRoles: hasPermission('roles', 'read'),
 
+      // Timetable permissions
+      canViewTimetables: hasPermission('timetables', 'read'),
+      canCreateTimetables: hasPermission('timetables', 'create'),
+      canUpdateTimetables: hasPermission('timetables', 'update'),
+      canDeleteTimetables: hasPermission('timetables', 'delete'),
+      canManageTimetables: hasPermission('timetables', 'manage'),
+
+      // Library permissions
+      canViewLibrary: hasPermission('library', 'read'),
+      canCreateLibraryItems: hasPermission('library', 'create'),
+      canUpdateLibraryItems: hasPermission('library', 'update'),
+      canDeleteLibraryItems: hasPermission('library', 'delete'),
+      canManageLibrary: hasPermission('library', 'manage'),
+
       // Role checks
       isAdmin: user.role === 'admin',
       isSubAdmin: user.role === 'sub-admin',
@@ -98,7 +112,13 @@ export function usePermissions() {
       '/admin': [{ resource: 'dashboard', action: 'read' }],
       '/admin/admissions': [{ resource: 'admissions', action: 'read' }],
       '/admin/users': [{ resource: 'users', action: 'read' }],
+      '/admin/students': [{ resource: 'students', action: 'read' }],
+      '/admin/attendance': [{ resource: 'attendance', action: 'read' }],
+      '/admin/examinations': [{ resource: 'examinations', action: 'read' }],
       '/admin/classes': [{ resource: 'classes', action: 'read' }],
+      '/admin/timetables': [{ resource: 'timetables', action: 'read' }],
+      '/admin/library': [{ resource: 'library', action: 'read' }],
+      '/admin/fees': [{ resource: 'fees', action: 'read' }],
       '/admin/reports': [{ resource: 'reports', action: 'read' }],
       '/admin/settings': [{ resource: 'settings', action: 'read' }],
       '/admin/roles': [{ resource: 'roles', action: 'read' }]

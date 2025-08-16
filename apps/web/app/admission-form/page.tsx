@@ -7,7 +7,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import type { AdmissionFormData, Gender } from '@repo/types'
+// Local type definitions
+type Gender = 'male' | 'female' | 'other'
+
+interface AdmissionFormData {
+  full_name: string
+  email: string
+  phone: string
+  date_of_birth: string
+  gender: Gender
+  class_level: string
+  address: string
+  parent_name: string
+  parent_phone: string
+  parent_email: string
+}
 
 export default function AdmissionForm() {
   const [formData, setFormData] = useState<AdmissionFormData>({
@@ -16,7 +30,7 @@ export default function AdmissionForm() {
     phone: '',
     date_of_birth: '',
     gender: 'male',
-    class: '1',
+    class_level: '1',
     address: '',
     parent_name: '',
     parent_phone: '',
@@ -29,7 +43,7 @@ export default function AdmissionForm() {
   const [applicationId, setApplicationId] = useState<string>('')
 
   const handleInputChange = (field: keyof AdmissionFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev: AdmissionFormData) => ({ ...prev, [field]: value }))
   }
 
   const handlePhotographChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +129,7 @@ export default function AdmissionForm() {
       
       // Add form fields
       Object.entries(formData).forEach(([key, value]) => {
-        submitData.append(key, value)
+        submitData.append(key, String(value))
       })
       
       // Add files
@@ -273,11 +287,11 @@ export default function AdmissionForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="class">Applying for Class *</Label>
+                  <Label htmlFor="class_level">Applying for Class *</Label>
                   <select
-                    id="class"
-                    value={formData.class}
-                    onChange={(e) => handleInputChange('class', e.target.value)}
+                    id="class_level"
+                    value={formData.class_level}
+                    onChange={(e) => handleInputChange('class_level', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >

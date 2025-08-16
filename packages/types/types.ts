@@ -45,17 +45,61 @@ export interface UserRoleDefinition {
   updated_at: string;
 }
 
-export interface Class {
+// Class Management Types
+export type ClassStatus = 'active' | 'inactive' | 'completed' | 'suspended';
+export type EnrollmentStatus = 'active' | 'inactive' | 'completed' | 'dropped' | 'transferred';
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+export interface Subject {
   id: string;
+  school_id: string;
   name: string;
+  code: string;
   description?: string;
-  subject: string;
-  grade_level: string;
-  teacher_id?: string;
-  max_students: number;
+  grade_level?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface Class {
+  id: string;
+  school_id: string;
+  name: string;
+  grade_level: number;
+  section: string;
+  class_teacher_id?: string;
+  room_number?: string;
+  capacity: number;
+  academic_year: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Computed fields
+  teacher?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  enrollment_count?: number;
+  subjects?: Subject[];
+  schedules?: ClassSchedule[];
+}
+
+export interface ClassSubject {
+  id: string;
+  class_id: string;
+  subject_id: string;
+  teacher_id?: string;
+  created_at: string;
+  updated_at: string;
+  // Computed fields
+  subject?: Subject;
+  teacher?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface ClassEnrollment {
@@ -63,7 +107,93 @@ export interface ClassEnrollment {
   class_id: string;
   student_id: string;
   enrolled_at: string;
-  status: 'active' | 'inactive' | 'completed';
+  status: EnrollmentStatus;
+  roll_number?: number;
+  created_at: string;
+  updated_at: string;
+  // Computed fields
+  student?: {
+    id: string;
+    name: string;
+    email: string;
+    student_id?: string;
+  };
+  class?: Class;
+}
+
+export interface ClassSchedule {
+  id: string;
+  class_id: string;
+  subject_id: string;
+  teacher_id?: string;
+  day_of_week: DayOfWeek;
+  start_time: string; // HH:MM format
+  end_time: string; // HH:MM format
+  room_number?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Computed fields
+  subject?: Subject;
+  teacher?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+// Form Data Types
+export interface CreateClassData {
+  name: string;
+  grade_level: number;
+  section: string;
+  class_teacher_id?: string;
+  room_number?: string;
+  capacity: number;
+  academic_year: string;
+  subject_ids?: string[];
+}
+
+export interface UpdateClassData {
+  name?: string;
+  grade_level?: number;
+  section?: string;
+  class_teacher_id?: string;
+  room_number?: string;
+  capacity?: number;
+  academic_year?: string;
+  is_active?: boolean;
+}
+
+export interface ClassFilters {
+  search?: string;
+  grade_level?: number;
+  section?: string;
+  teacher_id?: string;
+  subject_id?: string;
+  academic_year?: string;
+  is_active?: boolean;
+  has_teacher?: boolean;
+  enrollment_status?: 'full' | 'available' | 'empty';
+}
+
+export interface ClassStats {
+  total_classes: number;
+  active_classes: number;
+  total_students: number;
+  average_class_size: number;
+  classes_by_grade: Record<number, number>;
+  teacher_workload: Array<{
+    teacher_id: string;
+    teacher_name: string;
+    class_count: number;
+    student_count: number;
+  }>;
+  capacity_utilization: {
+    total_capacity: number;
+    total_enrolled: number;
+    utilization_percentage: number;
+  };
 }
 
 // Auth Store Types
@@ -83,7 +213,7 @@ export interface AuthActions {
   setUser: (user: AuthUser | null) => void;
   setLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<{ error?: string }>;
-  register: (email: string, password: string, name: string, role: UserRole) => Promise<AuthResult>;
+  register: (email: string, password: string, name: string, role: UserRole, schoolCode?: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<AuthUser>) => Promise<{ error?: string }>;
   checkPermission: (resource: string, action: string) => boolean;
@@ -104,7 +234,7 @@ export interface AdmissionApplication {
   phone?: string
   date_of_birth?: string
   gender?: Gender
-  class: string
+  class_level: string
   address?: string
   parent_name?: string
   parent_phone?: string

@@ -19,20 +19,20 @@ import ConfirmationDialog from '@/components/ui/confirmation-dialog'
 interface SchoolData {
   id: string
   name: string
-  logo_url?: string
-  address?: string
-  geo_lat?: number
-  geo_lng?: number
-  contact_email?: string
-  contact_phone?: string
+  logo_url?: string | null
+  address?: string | null
+  geo_lat?: number | null
+  geo_lng?: number | null
+  contact_email?: string | null
+  contact_phone?: string | null
   school_code: string
-  academic_start?: string
-  academic_end?: string
+  academic_start?: string | null
+  academic_end?: string | null
   timezone: string
   language: string
-  motto?: string
-  principal_name?: string
-  website_url?: string
+  motto?: string | null
+  principal_name?: string | null
+  website_url?: string | null
 }
 
 interface FormData {

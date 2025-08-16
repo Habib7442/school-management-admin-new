@@ -1,21 +1,24 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { 
-  Building2, 
-  Users, 
-  Shield, 
-  Bell, 
-  Database, 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PerformanceMonitor } from '@/components/admin/PerformanceMonitor'
+import {
+  Building2,
+  Users,
+  Shield,
+  Bell,
+  Database,
   Palette,
   Globe,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react'
 
 interface SettingsSection {
@@ -30,6 +33,7 @@ interface SettingsSection {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState('overview')
 
   // Show success message if coming from school profile save
   useEffect(() => {
@@ -96,6 +100,14 @@ export default function SettingsPage() {
       comingSoon: true
     },
     {
+      id: 'performance',
+      title: 'Performance Monitor',
+      description: 'View API optimization metrics, cache performance, and cost savings',
+      icon: <Activity className="h-6 w-6" />,
+      href: '#performance',
+      available: true
+    },
+    {
       id: 'appearance',
       title: 'Appearance',
       description: 'Customize themes, branding, and visual appearance',
@@ -117,7 +129,13 @@ export default function SettingsPage() {
 
   const handleSectionClick = (section: SettingsSection) => {
     if (section.available) {
-      router.push(section.href)
+      if (section.id === 'performance') {
+        setActiveTab('performance')
+      } else {
+        router.push(section.href)
+      }
+    } else {
+      toast.info('This feature is coming soon!')
     }
   }
 
@@ -132,49 +150,57 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Settings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {settingsSections.map((section) => (
-            <Card 
-              key={section.id}
-              className={`relative transition-all duration-200 ${
-                section.available 
-                  ? 'hover:shadow-lg cursor-pointer border-gray-200 hover:border-blue-300' 
-                  : 'opacity-60 cursor-not-allowed border-gray-100'
-              }`}
-              onClick={() => handleSectionClick(section)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className={`p-2 rounded-lg ${
-                    section.available 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'bg-gray-100 text-gray-400'
-                  }`}>
-                    {section.icon}
-                  </div>
-                  {section.available && (
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  )}
-                  {section.comingSoon && (
-                    <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                      Coming Soon
-                    </span>
-                  )}
-                </div>
-                <CardTitle className="text-lg">{section.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-sm">
-                  {section.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* Tabbed Interface */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">Settings Overview</TabsTrigger>
+            <TabsTrigger value="performance">Performance Monitor</TabsTrigger>
+          </TabsList>
 
-        {/* Quick Actions */}
-        <Card>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Settings Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {settingsSections.filter(section => section.id !== 'performance').map((section) => (
+                <Card
+                  key={section.id}
+                  className={`relative transition-all duration-200 ${
+                    section.available
+                      ? 'hover:shadow-lg cursor-pointer border-gray-200 hover:border-blue-300'
+                      : 'opacity-60 cursor-not-allowed border-gray-100'
+                  }`}
+                  onClick={() => handleSectionClick(section)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className={`p-2 rounded-lg ${
+                        section.available
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {section.icon}
+                      </div>
+                      {section.available && (
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      )}
+                      {section.comingSoon && (
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                          Coming Soon
+                        </span>
+                      )}
+                    </div>
+                    <CardTitle className="text-lg">{section.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-sm">
+                      {section.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>
@@ -219,34 +245,40 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* System Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>System Information</CardTitle>
-            <CardDescription>
-              Current system status and version information
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <div className="text-sm font-medium text-gray-500">System Status</div>
-                <div className="flex items-center mt-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm text-green-600">All Systems Operational</span>
+            {/* System Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>System Information</CardTitle>
+                <CardDescription>
+                  Current system status and version information
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">System Status</div>
+                    <div className="flex items-center mt-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                      <span className="text-sm text-green-600">All Systems Operational</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">Last Backup</div>
+                    <div className="text-sm text-gray-900 mt-1">2 hours ago</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">Version</div>
+                    <div className="text-sm text-gray-900 mt-1">v1.0.0</div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-500">Last Backup</div>
-                <div className="text-sm text-gray-900 mt-1">2 hours ago</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-500">Version</div>
-                <div className="text-sm text-gray-900 mt-1">v1.0.0</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <PerformanceMonitor />
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   )

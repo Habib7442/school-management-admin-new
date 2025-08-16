@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 
 // Create Supabase client with service role key for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+const supabaseAdmin = createAdminSupabaseClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +14,7 @@ export async function POST(request: NextRequest) {
     const phone = formData.get('phone') as string
     const date_of_birth = formData.get('date_of_birth') as string
     const gender = formData.get('gender') as string
-    const class_applying = formData.get('class') as string
+    const class_applying = formData.get('class_level') as string
     const address = formData.get('address') as string
     const parent_name = formData.get('parent_name') as string
     const parent_phone = formData.get('parent_phone') as string
@@ -153,7 +144,7 @@ export async function POST(request: NextRequest) {
         phone,
         date_of_birth,
         gender,
-        class: class_applying,
+        class_level: class_applying,
         address,
         parent_name,
         parent_phone,

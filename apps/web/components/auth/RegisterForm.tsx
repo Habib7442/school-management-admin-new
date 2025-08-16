@@ -54,8 +54,8 @@ export default function RegisterForm() {
       return false
     }
 
-    if (formData.password.length < 8) {
-      toast.error('Password must be at least 8 characters long')
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long')
       return false
     }
 
@@ -222,13 +222,13 @@ export default function RegisterForm() {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password (min 8 characters)"
+                  placeholder="Enter your password (min 6 characters)"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   disabled={isSubmitting || isLoading}
                   required
                   className="w-full pr-10"
-                  minLength={8}
+                  minLength={6}
                   autoComplete="new-password"
                 />
                 <button

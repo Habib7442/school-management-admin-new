@@ -1,200 +1,110 @@
-import { View, Text, ScrollView, TouchableOpacity, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
-import { router } from 'expo-router';
-import { useAuthStore } from '@/lib/stores/auth-store';
+import { Image } from 'expo-image';
+import { Platform, StyleSheet } from 'react-native';
 
-export default function ExploreScreen() {
-  const { user, isAuthenticated } = useAuthStore()
+import { Collapsible } from '@/components/Collapsible';
+import { ExternalLink } from '@/components/ExternalLink';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
-      router.replace('/' as any)
-    }
-  }, [isAuthenticated])
-
-  if (!isAuthenticated || !user) {
-    return null // Will redirect to login
-  }
-  const openLink = (url: string) => {
-    Linking.openURL(url);
-  };
-
+export default function TabTwoScreen() {
   return (
-    <SafeAreaView className="flex-1">
-      <LinearGradient
-        colors={['#FFD700', '#B8860B', '#FFFFFF']}
-        className="flex-1"
-      >
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ padding: 24 }}
-          showsVerticalScrollIndicator={false}
-        >
-        {/* Header */}
-        <View className="items-center mb-8">
-          <LinearGradient
-            colors={['#8B5CF6', '#7C3AED']}
-            className="w-20 h-20 rounded-full items-center justify-center mb-4 shadow-lg"
-          >
-            <Ionicons name="code-slash" size={32} color="white" />
-          </LinearGradient>
-          <Text className="text-3xl font-rubik-bold text-gray-800 mb-2 text-center">
-            Explore
-          </Text>
-          <Text className="text-base font-rubik text-gray-600 text-center">
-            Learn about the app features and architecture
-          </Text>
-        </View>
-
-        {/* Features Cards */}
-        <View className="gap-4">
-          {/* Authentication Feature */}
-          <View className="bg-white rounded-2xl p-6 shadow-lg">
-            <View className="flex-row items-center mb-3">
-              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
-                <Ionicons name="shield-checkmark" size={20} color="#3B82F6" />
-              </View>
-              <Text className="text-lg font-rubik-bold text-gray-800">
-                Role-Based Authentication
-              </Text>
-            </View>
-            <Text className="text-sm font-rubik text-gray-600 mb-4">
-              Secure authentication system with separate Teacher and Student portals using Supabase.
-            </Text>
-            <View className="flex-row items-center">
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text className="text-xs font-rubik text-gray-500 ml-2">
-                Email/Password authentication
-              </Text>
-            </View>
-          </View>
-
-          {/* UI/UX Feature */}
-          <View className="bg-white rounded-2xl p-6 shadow-lg">
-            <View className="flex-row items-center mb-3">
-              <View className="w-10 h-10 bg-purple-100 rounded-full items-center justify-center mr-3">
-                <Ionicons name="color-palette" size={20} color="#8B5CF6" />
-              </View>
-              <Text className="text-lg font-rubik-bold text-gray-800">
-                Modern UI Design
-              </Text>
-            </View>
-            <Text className="text-sm font-rubik text-gray-600 mb-4">
-              Beautiful interface built with NativeWind (Tailwind CSS) and custom Rubik fonts.
-            </Text>
-            <View className="flex-row items-center">
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text className="text-xs font-rubik text-gray-500 ml-2">
-                Responsive design with gradients
-              </Text>
-            </View>
-          </View>
-
-          {/* Architecture Feature */}
-          <View className="bg-white rounded-2xl p-6 shadow-lg">
-            <View className="flex-row items-center mb-3">
-              <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center mr-3">
-                <Ionicons name="construct" size={20} color="#10B981" />
-              </View>
-              <Text className="text-lg font-rubik-bold text-gray-800">
-                Clean Architecture
-              </Text>
-            </View>
-            <Text className="text-sm font-rubik text-gray-600 mb-4">
-              Well-organized codebase with TypeScript, component separation, and reusable UI elements.
-            </Text>
-            <View className="flex-row items-center">
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text className="text-xs font-rubik text-gray-500 ml-2">
-                Modular components and clean imports
-              </Text>
-            </View>
-          </View>
-
-          {/* Technology Stack */}
-          <View className="bg-white rounded-2xl p-6 shadow-lg">
-            <View className="flex-row items-center mb-3">
-              <View className="w-10 h-10 bg-yellow-100 rounded-full items-center justify-center mr-3">
-                <Ionicons name="layers" size={20} color="#F59E0B" />
-              </View>
-              <Text className="text-lg font-rubik-bold text-gray-800">
-                Technology Stack
-              </Text>
-            </View>
-            <Text className="text-sm font-rubik text-gray-600 mb-4">
-              Built with modern technologies for optimal performance and developer experience.
-            </Text>
-            <View className="gap-2">
-              <View className="flex-row items-center">
-                <Ionicons name="logo-react" size={16} color="#61DAFB" />
-                <Text className="text-xs font-rubik text-gray-500 ml-2">React Native + Expo</Text>
-              </View>
-              <View className="flex-row items-center">
-                <Ionicons name="server" size={16} color="#3ECF8E" />
-                <Text className="text-xs font-rubik text-gray-500 ml-2">Supabase Backend</Text>
-              </View>
-              <View className="flex-row items-center">
-                <Ionicons name="code" size={16} color="#3178C6" />
-                <Text className="text-xs font-rubik text-gray-500 ml-2">TypeScript</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Documentation Links */}
-          <View className="bg-white rounded-2xl p-6 shadow-lg">
-            <Text className="text-lg font-rubik-bold text-gray-800 mb-4">
-              Learn More
-            </Text>
-
-            <TouchableOpacity
-              className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg mb-3"
-              onPress={() => openLink('https://docs.expo.dev/router/introduction')}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center">
-                <Ionicons name="book" size={20} color="#6B7280" />
-                <Text className="text-sm font-rubik-medium text-gray-700 ml-3">
-                  Expo Router Documentation
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#6B7280" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg mb-3"
-              onPress={() => openLink('https://supabase.com/docs')}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center">
-                <Ionicons name="cloud" size={20} color="#6B7280" />
-                <Text className="text-sm font-rubik-medium text-gray-700 ml-3">
-                  Supabase Documentation
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#6B7280" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
-              onPress={() => openLink('https://www.nativewind.dev/')}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center">
-                <Ionicons name="brush" size={20} color="#6B7280" />
-                <Text className="text-sm font-rubik-medium text-gray-700 ml-3">
-                  NativeWind Documentation
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-        </View>
-        </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+      headerImage={
+        <IconSymbol
+          size={310}
+          color="#808080"
+          name="chevron.left.forwardslash.chevron.right"
+          style={styles.headerImage}
+        />
+      }>
+      <ThemedView style={styles.titleContainer}>
+        <ThemedText type="title">Explore</ThemedText>
+      </ThemedView>
+      <ThemedText>This app includes example code to help you get started.</ThemedText>
+      <Collapsible title="File-based routing">
+        <ThemedText>
+          This app has two screens:{' '}
+          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
+          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+        </ThemedText>
+        <ThemedText>
+          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
+          sets up the tab navigator.
+        </ThemedText>
+        <ExternalLink href="https://docs.expo.dev/router/introduction">
+          <ThemedText type="link">Learn more</ThemedText>
+        </ExternalLink>
+      </Collapsible>
+      <Collapsible title="Android, iOS, and web support">
+        <ThemedText>
+          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
+          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
+        </ThemedText>
+      </Collapsible>
+      <Collapsible title="Images">
+        <ThemedText>
+          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
+          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
+          different screen densities
+        </ThemedText>
+        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
+        <ExternalLink href="https://reactnative.dev/docs/images">
+          <ThemedText type="link">Learn more</ThemedText>
+        </ExternalLink>
+      </Collapsible>
+      <Collapsible title="Custom fonts">
+        <ThemedText>
+          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
+          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
+            custom fonts such as this one.
+          </ThemedText>
+        </ThemedText>
+        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
+          <ThemedText type="link">Learn more</ThemedText>
+        </ExternalLink>
+      </Collapsible>
+      <Collapsible title="Light and dark mode components">
+        <ThemedText>
+          This template has light and dark mode support. The{' '}
+          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
+          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
+        </ThemedText>
+        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
+          <ThemedText type="link">Learn more</ThemedText>
+        </ExternalLink>
+      </Collapsible>
+      <Collapsible title="Animations">
+        <ThemedText>
+          This template includes an example of an animated component. The{' '}
+          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
+          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
+          library to create a waving hand animation.
+        </ThemedText>
+        {Platform.select({
+          ios: (
+            <ThemedText>
+              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
+              component provides a parallax effect for the header image.
+            </ThemedText>
+          ),
+        })}
+      </Collapsible>
+    </ParallaxScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  headerImage: {
+    color: '#808080',
+    bottom: -90,
+    left: -35,
+    position: 'absolute',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+});

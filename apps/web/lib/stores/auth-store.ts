@@ -1,15 +1,29 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { supabase } from '../supabase-client'
+import { supabase } from '../supabase'
 import { toast } from 'sonner'
 import type { AuthStore, AuthUser, UserRole, AuthResult } from '@repo/types'
+
+// Helper function to safely extract error message
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message)
+  }
+  return 'An unexpected error occurred'
+}
 
 // Enhanced security configuration
 const SECURITY_CONFIG = {
   maxFailedAttempts: 5,
   lockoutDuration: 15, // minutes
   sessionTimeout: 60, // minutes
-  passwordMinLength: 8,
+  passwordMinLength: 6,
   retryAttempts: 3,
   retryDelay: 1000, // milliseconds
 }
@@ -68,18 +82,22 @@ const withRetry = async <T>(
   maxAttempts: number = SECURITY_CONFIG.retryAttempts,
   delay: number = SECURITY_CONFIG.retryDelay
 ): Promise<T> => {
-  let lastError: any
+  let lastError: unknown
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await operation()
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error
 
       // Don't retry on certain errors
-      if (error?.message?.includes('invalid_credentials') ||
-          error?.message?.includes('email_already_registered') ||
-          error?.status === 429) {
+      const errorMsg = getErrorMessage(error)
+      const hasStatus = error && typeof error === 'object' && 'status' in error
+      const statusCode = hasStatus ? (error as { status: number }).status : null
+
+      if (errorMsg.includes('invalid_credentials') ||
+          errorMsg.includes('email_already_registered') ||
+          statusCode === 429) {
         throw error
       }
 
@@ -193,7 +211,7 @@ export const useAuthStore = create<AuthStore>()(
 
           set({ isLoading: false })
           return {}
-        } catch (err: any) {
+        } catch (err: unknown) {
           set({ isLoading: false })
           toast.dismiss(loadingToast)
 
@@ -204,15 +222,16 @@ export const useAuthStore = create<AuthStore>()(
           rateLimitStore.set(rateLimitKey, currentRateLimit)
 
           // Parse error message for user-friendly display
+          const errorMsg = getErrorMessage(err)
           let errorMessage = 'An unexpected error occurred'
 
-          if (err.message?.includes('Invalid login credentials')) {
+          if (errorMsg.includes('Invalid login credentials')) {
             errorMessage = 'Invalid email or password'
-          } else if (err.message?.includes('Email not confirmed')) {
+          } else if (errorMsg.includes('Email not confirmed')) {
             errorMessage = 'Please check your email and confirm your account'
-          } else if (err.message?.includes('Too many requests')) {
+          } else if (errorMsg.includes('Too many requests')) {
             errorMessage = 'Too many login attempts. Please try again later'
-          } else if (err.message?.includes('Network')) {
+          } else if (errorMsg.includes('Network')) {
             errorMessage = 'Network error. Please check your connection'
           }
 
@@ -224,7 +243,7 @@ export const useAuthStore = create<AuthStore>()(
           // Log security event
           console.log('Security Event: Login Failure', {
             email,
-            error: err.message,
+            error: errorMsg,
             attempts: currentRateLimit.attempts,
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent
@@ -234,7 +253,7 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      register: async (email: string, password: string, name: string, role: UserRole): Promise<AuthResult> => {
+      register: async (email: string, password: string, name: string, role: UserRole, schoolCode?: string): Promise<AuthResult> => {
         // Validate password strength
         const passwordValidation = validatePassword(password)
         if (!passwordValidation.isValid) {
@@ -309,20 +328,21 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           return {}
-        } catch (err: any) {
+        } catch (err: unknown) {
           set({ isLoading: false })
           toast.dismiss(loadingToast)
 
           // Parse error message for user-friendly display
+          const errorMsg = getErrorMessage(err)
           let errorMessage = 'An unexpected error occurred'
 
-          if (err.message?.includes('User already registered')) {
+          if (errorMsg.includes('User already registered')) {
             errorMessage = 'An account with this email already exists'
-          } else if (err.message?.includes('Password should be')) {
+          } else if (errorMsg.includes('Password should be')) {
             errorMessage = 'Password does not meet security requirements'
-          } else if (err.message?.includes('Invalid email')) {
+          } else if (errorMsg.includes('Invalid email')) {
             errorMessage = 'Please enter a valid email address'
-          } else if (err.message?.includes('Network')) {
+          } else if (errorMsg.includes('Network')) {
             errorMessage = 'Network error. Please check your connection'
           }
 
@@ -334,7 +354,7 @@ export const useAuthStore = create<AuthStore>()(
           // Log security event
           console.log('Security Event: Registration Failure', {
             email,
-            error: err.message,
+            error: errorMsg,
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent
           })
@@ -378,7 +398,7 @@ export const useAuthStore = create<AuthStore>()(
             })
           }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
           toast.dismiss(loadingToast)
 
           // Even if logout fails on server, clear local state for security
@@ -455,23 +475,15 @@ export const useAuthStore = create<AuthStore>()(
           get().setUser(data)
           set({ isLoading: false })
           return {}
-        } catch (err) {
+        } catch {
           set({ isLoading: false })
           return { error: 'Failed to update profile' }
         }
       },
 
       checkPermission: (resource: string, action: string) => {
-        const { permissions, user } = get()
-
-        // First check legacy permission system
-        const hasLegacyPermission = permissions[resource]?.includes(action) || false
-        if (hasLegacyPermission) return true
-
-        // TODO: Integrate with new role-based permission system
-        // This will be enhanced when the database is set up
-        // For now, fall back to legacy system
-        return false
+        const { permissions } = get()
+        return permissions[resource]?.includes(action) || false
       },
     }),
     {
@@ -500,6 +512,17 @@ function getUserPermissions(role: UserRole): Record<string, string[]> {
       classes: ['create', 'read', 'update', 'delete'],
       students: ['create', 'read', 'update', 'delete'],
       teachers: ['create', 'read', 'update', 'delete'],
+      attendance: ['create', 'read', 'update', 'delete'],
+      examinations: ['create', 'read', 'update', 'delete'],
+      timetables: ['create', 'read', 'update', 'delete', 'manage'],
+      time_periods: ['create', 'read', 'update', 'delete'],
+      library: ['create', 'read', 'update', 'delete', 'manage'],
+      rooms: ['create', 'read', 'update', 'delete'],
+      fees: ['create', 'read', 'update', 'delete'],
+      payments: ['create', 'read', 'update', 'verify'],
+      invoices: ['create', 'read', 'update', 'send'],
+      refunds: ['create', 'read', 'approve'],
+      financial_reports: ['create', 'read'],
       reports: ['create', 'read', 'update', 'delete'],
       settings: ['read', 'update'],
     },
@@ -510,14 +533,33 @@ function getUserPermissions(role: UserRole): Record<string, string[]> {
       classes: ['create', 'read', 'update'],
       students: ['create', 'read', 'update'],
       teachers: ['read', 'update'],
+      attendance: ['create', 'read', 'update'],
+      examinations: ['create', 'read', 'update'],
+      timetables: ['create', 'read', 'update', 'delete', 'manage'],
+      time_periods: ['create', 'read', 'update', 'delete'],
+      rooms: ['create', 'read', 'update', 'delete'],
+      library: ['create', 'read', 'update', 'delete', 'manage'],
+      fees: ['create', 'read', 'update'],
+      payments: ['create', 'read', 'update'],
+      invoices: ['create', 'read', 'update'],
+      refunds: ['read'],
+      financial_reports: ['read'],
       reports: ['read', 'update'],
     },
     teacher: {
       dashboard: ['read'],
       classes: ['read', 'update'],
       students: ['read', 'update'],
+      attendance: ['create', 'read', 'update'],
+      examinations: ['read', 'update'], // Teachers can enter grades but not create exams
+      timetables: ['read'], // Teachers can view their schedules
+      time_periods: ['read'], // Teachers can view time periods
+      rooms: ['read'], // Teachers can view room information
+      fees: ['read'], // Teachers can view fee information for their students
+      payments: ['read'], // Teachers can view payment status
       reports: ['create', 'read', 'update'],
       assignments: ['create', 'read', 'update', 'delete'],
+      library: ['read'], // Teachers can view library resources
     },
     student: {
       dashboard: ['read'],
@@ -525,6 +567,10 @@ function getUserPermissions(role: UserRole): Record<string, string[]> {
       classes: ['read'],
       assignments: ['read', 'update'],
       grades: ['read'],
+      fees: ['read'], // Students can view their own fee information
+      payments: ['read'], // Students can view their payment history
+      invoices: ['read'], // Students can view their invoices
+      library: ['read'], // Students can view library resources and manage their borrowings
     },
   }
 
@@ -555,7 +601,7 @@ const setupSessionRefresh = () => {
         // Refresh if session expires in less than 10 minutes
         if (timeUntilExpiry < 10 * 60 * 1000) {
           console.log('Auto-refreshing session...')
-          await useAuthStore.getState().refreshSession()
+          await useAuthStore.getState().refreshSession?.()
         }
       }
     }

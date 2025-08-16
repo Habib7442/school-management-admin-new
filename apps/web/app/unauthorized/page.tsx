@@ -15,10 +15,10 @@ export default function UnauthorizedPage() {
       // Redirect based on user role
       switch (user.role) {
         case 'teacher':
-          router.push('/teacher-dashboard')
+          router.push('/dashboard')
           break
         case 'student':
-          router.push('/student-dashboard')
+          router.push('/student')
           break
         default:
           router.push('/')

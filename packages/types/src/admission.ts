@@ -11,7 +11,7 @@ export interface AdmissionApplication {
   phone?: string
   date_of_birth?: string
   gender?: Gender
-  class: string
+  class_level: string
   address?: string
   parent_name?: string
   parent_phone?: string
@@ -44,7 +44,7 @@ export interface AdmissionFormData {
   phone: string
   date_of_birth: string
   gender: Gender
-  class: string
+  class_level: string
   address: string
   parent_name: string
   parent_phone: string

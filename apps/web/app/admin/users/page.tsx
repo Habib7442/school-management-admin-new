@@ -6,10 +6,72 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { toast } from 'sonner'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import type { AuthUser, UserRole } from '@repo/types'
+
+// Extended user type with related data
+interface ExtendedUser extends AuthUser {
+  students?: Array<{
+    id: string
+    student_id: string
+    admission_number: string
+    class_id: string
+    class: string
+    section: string
+    roll_number: string
+    date_of_birth: string
+    gender: string
+    blood_group: string
+    address: string
+    parent_name: string
+    parent_phone: string
+    parent_email: string
+    emergency_contact: string
+    medical_conditions: string
+    previous_school: string
+    transport_required: boolean
+    fee_concession: boolean
+    scholarship: boolean
+    is_active: boolean
+    emergency_contact_name: string
+    emergency_contact_phone: string
+    emergency_contact_relation: string
+  }>
+  admissions?: Array<{
+    class_level: string
+    status: string
+    applied_date: string
+  }>
+  teachers?: Array<{
+    id: string
+    employee_id: string
+    subject: string
+    department: string
+    qualification: string
+    experience_years: number
+    joining_date: string
+    salary: number
+    contact_number: string
+    emergency_contact: string
+    address: string
+    blood_group: string
+    marital_status: string
+    spouse_name: string
+    children_count: number
+    is_active: boolean
+    designation: string
+  }>
+}
 
 // Helper function for role colors
 const getRoleColor = (role: UserRole) => {
@@ -30,6 +92,14 @@ export default function UserManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null)
+  const [deletingUser, setDeletingUser] = useState<AuthUser | null>(null)
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const pageSize = 20
+
   const { checkPermission } = useAuthStore()
 
   useEffect(() => {
@@ -39,7 +109,8 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      // First get all profiles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -92,14 +163,46 @@ export default function UserManagement() {
         `)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Supabase error:', error)
+      if (profilesError) {
+        console.error('Supabase error:', profilesError)
         toast.error('Failed to fetch users')
-        throw error
+        throw profilesError
       }
 
-      console.log('Fetched users:', data)
-      setUsers(data || [])
+      // Get admissions data separately (optional - don't fail if admissions table doesn't exist)
+      let admissionsData = null
+      try {
+        const { data, error: admissionsError } = await supabase
+          .from('admissions')
+          .select('email, class_level, status, applied_date')
+
+        if (admissionsError) {
+          console.warn('Could not fetch admissions data:', admissionsError)
+        } else {
+          admissionsData = data
+        }
+      } catch (err) {
+        console.warn('Admissions table might not exist:', err)
+      }
+
+      // Create a map of admissions by email for quick lookup
+      const admissionsMap = new Map()
+      if (admissionsData) {
+        admissionsData.forEach(admission => {
+          admissionsMap.set(admission.email.toLowerCase(), admission)
+        })
+      }
+
+      // Combine profiles with admission data
+      const usersWithAdmissions = (profilesData || []).map(user => ({
+        ...user,
+        admissions: admissionsMap.has(user.email.toLowerCase())
+          ? [admissionsMap.get(user.email.toLowerCase())]
+          : []
+      }))
+
+      console.log('Fetched users:', usersWithAdmissions)
+      setUsers(usersWithAdmissions)
     } catch (error) {
       console.error('Error fetching users:', error)
       toast.error('Failed to load users')
@@ -116,27 +219,38 @@ export default function UserManagement() {
     return matchesSearch && matchesRole
   })
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return
+
     if (!checkPermission('users', 'delete')) {
-      alert('You do not have permission to delete users')
+      toast.error('Access denied', {
+        description: 'You do not have permission to delete users.',
+        duration: 3000
+      })
       return
     }
 
-    if (confirm('Are you sure you want to delete this user?')) {
-      try {
-        const { error } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', userId)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deletingUser.id)
 
-        if (error) throw error
-        
-        setUsers(users.filter(user => user.id !== userId))
-        alert('User deleted successfully')
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        alert('Failed to delete user')
-      }
+      if (error) throw error
+
+      setUsers(users.filter(user => user.id !== deletingUser.id))
+      toast.success('User deleted successfully', {
+        description: `${deletingUser.name} has been removed.`,
+        duration: 3000
+      })
+      setDeletingUser(null)
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error('Failed to delete user', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        duration: 5000
+      })
+      setDeletingUser(null)
     }
   }
 
@@ -242,8 +356,9 @@ export default function UserManagement() {
                   </thead>
                   <tbody>
                     {filteredUsers.map((user) => {
-                      const studentData = user.students?.[0]
-                      const teacherData = user.teachers?.[0]
+                      const extendedUser = user as ExtendedUser
+                      const studentData = extendedUser.students?.[0]
+                      const teacherData = extendedUser.teachers?.[0]
 
                       return (
                         <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -256,7 +371,14 @@ export default function UserManagement() {
                                 <div className="font-medium text-gray-900">
                                   {user.name || 'No Name Set'}
                                 </div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
+                                <div className="text-sm text-gray-500">
+                                  {user.email}
+                                  {user.role === 'student' && user.admissions && user.admissions.length > 0 && user.admissions[0].class_level && (
+                                    <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                      Applied: Grade {user.admissions[0].class_level}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -321,14 +443,37 @@ export default function UserManagement() {
                                 </Button>
                               )}
                               {checkPermission('users', 'delete') && (
-                                <Button
-                                  onClick={() => handleDeleteUser(user.id)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  Delete
-                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      Delete
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{user.name}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => {
+                                          setDeletingUser(user)
+                                          handleDeleteUser()
+                                        }}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               )}
                             </div>
                           </td>
@@ -650,7 +795,7 @@ function EditUserModal({
   onClose,
   onUserUpdated
 }: {
-  user: any // Extended user type with students/teachers data
+  user: ExtendedUser
   onClose: () => void
   onUserUpdated: () => void
 }) {
@@ -667,7 +812,6 @@ function EditUserModal({
     // Student-specific fields
     student_id: studentData?.student_id || '',
     admission_number: studentData?.admission_number || '',
-    section: studentData?.section || '',
     roll_number: studentData?.roll_number || '',
     date_of_birth: studentData?.date_of_birth || '',
     gender: studentData?.gender || '',
@@ -729,10 +873,13 @@ function EditUserModal({
 
       // Update role-specific table based on user role
       if (user.role === 'student') {
+        // Ensure unique fields are either valid strings or null (not empty strings)
+        const cleanStudentId = formData.student_id?.trim()
+        const cleanAdmissionNumber = formData.admission_number?.trim()
+
         const studentUpdateData = {
-          student_id: formData.student_id.trim() || null,
-          admission_number: formData.admission_number.trim() || null,
-          section: formData.section.trim() || null,
+          student_id: cleanStudentId && cleanStudentId.length > 0 ? cleanStudentId : null,
+          admission_number: cleanAdmissionNumber && cleanAdmissionNumber.length > 0 ? cleanAdmissionNumber : null,
           roll_number: formData.roll_number ? parseInt(formData.roll_number) : null,
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
@@ -747,33 +894,28 @@ function EditUserModal({
           updated_at: new Date().toISOString()
         }
 
-        if (studentData) {
-          // Update existing student record
-          const { error: studentError } = await supabase
-            .from('students')
-            .update(studentUpdateData)
-            .eq('id', user.id)
+        // Use upsert to handle both insert and update cases
+        const { error: studentError } = await supabase
+          .from('students')
+          .upsert({
+            id: user.id,
+            school_id: user.school_id,
+            ...studentUpdateData
+          }, {
+            onConflict: 'id'
+          })
 
-          if (studentError) throw studentError
-        } else {
-          // Create new student record
-          const { error: studentError } = await supabase
-            .from('students')
-            .insert({
-              id: user.id,
-              school_id: user.school_id,
-              ...studentUpdateData
-            })
-
-          if (studentError) throw studentError
-        }
+        if (studentError) throw studentError
       } else if (user.role === 'teacher') {
+        // Ensure unique fields are either valid strings or null (not empty strings)
+        const cleanEmployeeId = formData.employee_id?.trim()
+
         const teacherUpdateData = {
-          employee_id: formData.employee_id.trim() || null,
+          employee_id: cleanEmployeeId && cleanEmployeeId.length > 0 ? cleanEmployeeId : null,
           department: formData.department.trim() || null,
           designation: formData.designation.trim() || null,
           qualification: formData.qualification.trim() || null,
-          experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
+          experience_years: formData.experience_years ? parseInt(String(formData.experience_years)) : null,
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
           blood_group: formData.blood_group || null,
@@ -781,31 +923,23 @@ function EditUserModal({
           emergency_contact_name: formData.emergency_contact_name.trim() || null,
           emergency_contact_phone: formData.emergency_contact_phone.trim() || null,
           emergency_contact_relation: formData.emergency_contact_relation.trim() || null,
-          salary: formData.salary ? parseFloat(formData.salary) : null,
+          salary: formData.salary ? parseFloat(String(formData.salary)) : null,
           joining_date: formData.joining_date || null,
           updated_at: new Date().toISOString()
         }
 
-        if (teacherData) {
-          // Update existing teacher record
-          const { error: teacherError } = await supabase
-            .from('teachers')
-            .update(teacherUpdateData)
-            .eq('id', user.id)
+        // Use upsert to handle both insert and update cases
+        const { error: teacherError } = await supabase
+          .from('teachers')
+          .upsert({
+            id: user.id,
+            school_id: user.school_id,
+            ...teacherUpdateData
+          }, {
+            onConflict: 'id'
+          })
 
-          if (teacherError) throw teacherError
-        } else {
-          // Create new teacher record
-          const { error: teacherError } = await supabase
-            .from('teachers')
-            .insert({
-              id: user.id,
-              school_id: user.school_id,
-              ...teacherUpdateData
-            })
-
-          if (teacherError) throw teacherError
-        }
+        if (teacherError) throw teacherError
       }
 
       toast.success('User updated successfully', {
@@ -817,8 +951,29 @@ function EditUserModal({
       onClose()
     } catch (error) {
       console.error('Error updating user:', error)
+
+      // Provide more specific error messages
+      let errorMessage = 'Unknown error occurred'
+      if (error instanceof Error) {
+        if (error.message.includes('duplicate key value violates unique constraint "students_pkey"')) {
+          errorMessage = 'Student record already exists. This should not happen during an update.'
+        } else if (error.message.includes('duplicate key value violates unique constraint') && error.message.includes('student_id')) {
+          errorMessage = 'A student with this Student ID already exists'
+        } else if (error.message.includes('duplicate key value violates unique constraint') && error.message.includes('admission_number')) {
+          errorMessage = 'A student with this Admission Number already exists'
+        } else if (error.message.includes('duplicate key value violates unique constraint') && error.message.includes('employee_id')) {
+          errorMessage = 'A teacher with this Employee ID already exists'
+        } else if (error.message.includes('duplicate key')) {
+          errorMessage = 'A user with this unique identifier already exists'
+        } else if (error.message.includes('foreign key')) {
+          errorMessage = 'Invalid reference to class or school'
+        } else {
+          errorMessage = error.message
+        }
+      }
+
       toast.error('Failed to update user', {
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        description: errorMessage,
         duration: 5000
       })
     } finally {
@@ -889,7 +1044,38 @@ function EditUserModal({
             {/* Student-specific fields */}
             {user.role === 'student' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Student Information</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Student Information</h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Basic student details. Use Class Management to assign students to classes.
+                  </p>
+                </div>
+
+                {/* Admission Information */}
+                {user.admissions && user.admissions.length > 0 && user.admissions[0].class_level && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-blue-900 mb-2">Original Admission Application</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <span className="text-blue-700 font-medium">Applied for Class:</span>
+                        <p className="text-blue-900">Grade {user.admissions[0].class_level}</p>
+                      </div>
+                      <div>
+                        <span className="text-blue-700 font-medium">Application Status:</span>
+                        <p className="text-blue-900 capitalize">{user.admissions[0].status || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <span className="text-blue-700 font-medium">Applied Date:</span>
+                        <p className="text-blue-900">
+                          {user.admissions[0].applied_date
+                            ? new Date(user.admissions[0].applied_date).toLocaleDateString()
+                            : 'Not available'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -909,16 +1095,6 @@ function EditUserModal({
                       value={formData.admission_number}
                       onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
                       placeholder="Enter admission number"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="section">Section/Class</Label>
-                    <Input
-                      id="section"
-                      value={formData.section}
-                      onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                      placeholder="Enter section/class"
                     />
                   </div>
 

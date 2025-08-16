@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './useAuth'
-import type { Class, ClassEnrollment } from '@repo/types'
+import { toast } from 'sonner'
+import type {
+  Class,
+  ClassEnrollment,
+  Subject,
+  ClassFilters,
+  CreateClassData,
+  UpdateClassData,
+  ClassStats
+} from '@repo/types'
 
 interface UseClassesOptions {
   teacherId?: string
@@ -9,36 +18,18 @@ interface UseClassesOptions {
   isActive?: boolean
   limit?: number
   autoFetch?: boolean
+  filters?: ClassFilters
 }
 
-interface CreateClassData {
-  name: string
-  description?: string
-  subject: string
-  grade_level: string
-  teacher_id?: string
-  max_students?: number
-}
+// Cache configuration
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const CACHE_KEY = 'classes_data'
 
-interface UpdateClassData {
-  name?: string
-  description?: string
-  subject?: string
-  grade_level?: string
-  teacher_id?: string
-  max_students?: number
-  is_active?: boolean
-}
-
-interface ClassWithDetails extends Class {
-  teacher?: {
-    id: string
-    name: string
-    email: string
-  }
-  enrollment_count?: number
-  enrollments?: ClassEnrollment[]
-}
+// Simple in-memory cache
+let classesCache: {
+  data: Class[]
+  timestamp: number
+} | null = null
 
 export function useClasses(options: UseClassesOptions = {}) {
   const [classes, setClasses] = useState<ClassWithDetails[]>([])
@@ -86,13 +77,13 @@ export function useClasses(options: UseClassesOptions = {}) {
       // Process data to add enrollment counts
       const processedClasses = (data || []).map(classItem => ({
         ...classItem,
-        enrollment_count: classItem.enrollments?.filter(e => e.status === 'active').length || 0
+        enrollment_count: classItem.enrollments?.filter((e: ClassEnrollment) => e.status === 'active').length || 0
       }))
 
       // Filter by student enrollment if specified
       if (studentId) {
         const studentClasses = processedClasses.filter(classItem =>
-          classItem.enrollments?.some(e => e.student_id === studentId && e.status === 'active')
+          classItem.enrollments?.some((e: ClassEnrollment) => e.student_id === studentId && e.status === 'active')
         )
         setClasses(studentClasses)
       } else {
@@ -282,12 +273,113 @@ export function useClasses(options: UseClassesOptions = {}) {
       active: classes.filter(c => c.is_active).length,
       inactive: classes.filter(c => !c.is_active).length,
       totalEnrollments: classes.reduce((sum, c) => sum + (c.enrollment_count || 0), 0),
-      averageEnrollment: classes.length > 0 
+      averageEnrollment: classes.length > 0
         ? Math.round(classes.reduce((sum, c) => sum + (c.enrollment_count || 0), 0) / classes.length)
         : 0
     }
 
     return stats
+  }
+
+  const bulkEnrollStudents = async (classId: string, studentIds: string[]) => {
+    if (!hasPermission('classes', 'update')) {
+      throw new Error('Permission denied')
+    }
+
+    if (studentIds.length === 0) {
+      throw new Error('No students selected')
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Get class info to check capacity
+      const classInfo = getClassById(classId)
+      if (!classInfo) {
+        throw new Error('Class not found')
+      }
+
+      const availableSpots = (classInfo.max_students || 30) - (classInfo.enrollment_count || 0)
+      if (studentIds.length > availableSpots) {
+        throw new Error(`Class capacity exceeded. Only ${availableSpots} spots available.`)
+      }
+
+      // Create enrollment records
+      const enrollments = studentIds.map(studentId => ({
+        class_id: classId,
+        student_id: studentId,
+        status: 'active'
+      }))
+
+      const { error: enrollmentError } = await supabase
+        .from('class_enrollments')
+        .insert(enrollments)
+
+      if (enrollmentError) throw enrollmentError
+
+      // Update students table with class_id
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ class_id: classId })
+        .in('id', studentIds)
+
+      if (updateError) throw updateError
+
+      // Refresh classes to update enrollment counts
+      await fetchClasses()
+
+      return { error: null }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to enroll students'
+      setError(errorMessage)
+      return { error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const bulkUnenrollStudents = async (classId: string, studentIds: string[]) => {
+    if (!hasPermission('classes', 'update')) {
+      throw new Error('Permission denied')
+    }
+
+    if (studentIds.length === 0) {
+      throw new Error('No students selected')
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Remove enrollment records
+      const { error: unenrollError } = await supabase
+        .from('class_enrollments')
+        .delete()
+        .eq('class_id', classId)
+        .in('student_id', studentIds)
+
+      if (unenrollError) throw unenrollError
+
+      // Clear class_id from students table
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ class_id: null })
+        .in('id', studentIds)
+
+      if (updateError) throw updateError
+
+      // Refresh classes to update enrollment counts
+      await fetchClasses()
+
+      return { error: null }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to unenroll students'
+      setError(errorMessage)
+      return { error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Auto-fetch on mount if enabled
@@ -310,6 +402,8 @@ export function useClasses(options: UseClassesOptions = {}) {
     deleteClass,
     enrollStudent,
     unenrollStudent,
+    bulkEnrollStudents,
+    bulkUnenrollStudents,
 
     // Utilities
     getClassById,

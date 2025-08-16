@@ -139,7 +139,7 @@ export default function AdmissionManagement() {
           phone,
           date_of_birth,
           gender,
-          class,
+          class_level,
           address,
           parent_name,
           parent_phone,
@@ -625,7 +625,7 @@ export default function AdmissionManagement() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                            Class {application.class}
+                            Class {application.class_level}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-500">
@@ -1031,7 +1031,7 @@ export default function AdmissionManagement() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Class</label>
-                    <p className="text-gray-900">Class {selectedApplication.class}</p>
+                    <p className="text-gray-900">Class {selectedApplication.class_level}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Date of Birth</label>

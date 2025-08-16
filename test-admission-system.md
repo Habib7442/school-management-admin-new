@@ -3,7 +3,7 @@
 ## ✅ **Implementation Complete**
 
 ### **Database Schema Updates:**
-- ✅ Created `admissions` table with all required fields including `class`
+- ✅ Created `admissions` table with all required fields including `class_level`
 - ✅ Updated `students` table with `student_avatar_url`, `admission_id`, `admission_type`
 - ✅ Created storage bucket `admission-documents` for file uploads
 - ✅ Added proper indexes and triggers
@@ -94,7 +94,7 @@ Files:
 
 **Check Admissions Table:**
 ```sql
-SELECT id, full_name, email, class, status, applied_date 
+SELECT id, full_name, email, class_level, status, applied_date
 FROM admissions 
 ORDER BY created_at DESC;
 ```

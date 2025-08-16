@@ -63,7 +63,7 @@ export function useSessionManager(options: SessionManagerOptions = {}) {
             action: {
               label: 'Extend Session',
               onClick: async () => {
-                const success = await refreshSession()
+                const success = await refreshSession?.()
                 if (success) {
                   toast.success('Session extended successfully')
                   warningShownRef.current = false
@@ -79,7 +79,7 @@ export function useSessionManager(options: SessionManagerOptions = {}) {
       // Auto-refresh if enabled and within refresh window
       if (autoRefresh && minutesUntilExpiry <= warningThreshold && minutesUntilExpiry > 2) {
         console.log('Auto-refreshing session...')
-        const success = await refreshSession()
+        const success = await refreshSession?.()
         if (success) {
           console.log('Session auto-refreshed successfully')
           warningShownRef.current = false
@@ -110,7 +110,7 @@ export function useSessionManager(options: SessionManagerOptions = {}) {
   // Manual session refresh
   const extendSession = useCallback(async () => {
     try {
-      const success = await refreshSession()
+      const success = await refreshSession?.()
       if (success) {
         toast.success('Session extended successfully')
         warningShownRef.current = false

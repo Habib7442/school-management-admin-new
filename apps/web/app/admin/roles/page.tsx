@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { toast } from 'sonner'
 import { Search, Plus, Edit, Trash2, Users, Shield, Settings, UserCheck } from 'lucide-react'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { UserRoleAssignmentModal } from '@/components/admin/UserRoleAssignment'
 
 // Types for role management
@@ -28,6 +29,9 @@ interface Role {
   _count?: {
     user_roles: number
     role_permissions: number
+  }
+  _permissions?: {
+    count: number
   }
 }
 
@@ -59,6 +63,7 @@ export default function RoleManagement() {
   const [showPermissionModal, setShowPermissionModal] = useState(false)
   const [showUserAssignmentModal, setShowUserAssignmentModal] = useState(false)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  const [deletingRole, setDeletingRole] = useState<Role | null>(null)
   const { checkPermission, user } = useAuthStore()
 
   // Check if user has access to role management
@@ -172,7 +177,9 @@ export default function RoleManagement() {
     setShowPermissionModal(true)
   }
 
-  const handleDeleteRole = async (role: Role) => {
+  const handleDeleteRole = async () => {
+    if (!deletingRole) return
+
     if (!checkPermission('roles', 'delete')) {
       toast.error('Access denied', {
         description: 'You do not have permission to delete roles.',
@@ -181,7 +188,7 @@ export default function RoleManagement() {
       return
     }
 
-    if (role.is_system_role) {
+    if (deletingRole.is_system_role) {
       toast.error('Cannot delete system role', {
         description: 'System roles cannot be deleted.',
         duration: 3000
@@ -189,30 +196,28 @@ export default function RoleManagement() {
       return
     }
 
-    if (!confirm(`Are you sure you want to delete the role "${role.display_name}"? This action cannot be undone.`)) {
-      return
-    }
-
     try {
       const { error } = await supabase
         .from('roles')
         .delete()
-        .eq('id', role.id)
+        .eq('id', deletingRole.id)
 
       if (error) throw error
 
       toast.success('Role deleted successfully', {
-        description: `The role "${role.display_name}" has been removed.`,
+        description: `The role "${deletingRole.display_name}" has been removed.`,
         duration: 3000
       })
 
       await fetchRoles()
+      setDeletingRole(null)
     } catch (error) {
       console.error('Error deleting role:', error)
       toast.error('Failed to delete role', {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
         duration: 5000
       })
+      setDeletingRole(null)
     }
   }
 
@@ -242,7 +247,7 @@ export default function RoleManagement() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <AdminLayout title="Role Management">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -436,14 +441,37 @@ export default function RoleManagement() {
                               </>
                             )}
                             {checkPermission('roles', 'delete') && !role.is_system_role && (
-                              <Button
-                                onClick={() => handleDeleteRole(role)}
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Role</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete the role "{role.display_name}"? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => {
+                                        setDeletingRole(role)
+                                        handleDeleteRole()
+                                      }}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             )}
                           </div>
                         </td>

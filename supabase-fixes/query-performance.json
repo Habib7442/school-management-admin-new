@@ -1,0 +1,202 @@
+[
+  {
+    "rolname": "authenticated",
+    "query": "select set_config('search_path', $1, true), set_config($2, $3, true), set_config('role', $4, true), set_config('request.jwt.claims', $5, true), set_config('request.method', $6, true), set_config('request.path', $7, true), set_config('request.headers', $8, true), set_config('request.cookies', $9, true)",
+    "calls": 148439,
+    "total_time": 4763.88961900008,
+    "min_time": 0.016936,
+    "max_time": 13.432304,
+    "mean_time": 0.0320932478593901,
+    "avg_rows": 1
+  },
+  {
+    "rolname": "authenticated",
+    "query": "WITH pgrst_source AS ( SELECT \"public\".\"profiles\".* FROM \"public\".\"profiles\" WHERE  \"public\".\"profiles\".\"role\" = $1  ORDER BY \"public\".\"profiles\".\"created_at\" DESC  LIMIT $2 OFFSET $3 )  SELECT $4::bigint AS total_result_set, pg_catalog.count(_postgrest_t) AS page_total, coalesce(json_agg(_postgrest_t), $5) AS body, nullif(current_setting($6, $7), $8) AS response_headers, nullif(current_setting($9, $10), $11) AS response_status, $12 AS response_inserted FROM ( SELECT * FROM pgrst_source ) _postgrest_t",
+    "calls": 73286,
+    "total_time": 2764.34163999999,
+    "min_time": 0.018609,
+    "max_time": 8.904785,
+    "mean_time": 0.0377199143083261,
+    "avg_rows": 1
+  },
+  {
+    "rolname": "authenticated",
+    "query": "WITH pgrst_source AS ( SELECT \"public\".\"classes\".*, row_to_json(\"classes_teacher_1\".*)::jsonb AS \"teacher\", COALESCE( \"classes_enrollments_1\".\"classes_enrollments_1\", $8) AS \"enrollments\" FROM \"public\".\"classes\" LEFT JOIN LATERAL ( SELECT \"profiles_1\".\"id\", \"profiles_1\".\"name\", \"profiles_1\".\"email\" FROM \"public\".\"profiles\" AS \"profiles_1\" WHERE \"profiles_1\".\"id\" = \"public\".\"classes\".\"teacher_id\"   LIMIT $1 OFFSET $2 ) AS \"classes_teacher_1\" ON $9  LEFT JOIN LATERAL ( SELECT json_agg(\"classes_enrollments_1\")::jsonb AS \"classes_enrollments_1\" FROM (SELECT \"class_enrollments_1\".\"id\", \"class_enrollments_1\".\"student_id\", \"class_enrollments_1\".\"status\" FROM \"public\".\"class_enrollments\" AS \"class_enrollments_1\" WHERE \"class_enrollments_1\".\"class_id\" = \"public\".\"classes\".\"id\"   LIMIT $3 OFFSET $4 ) AS \"classes_enrollments_1\" ) AS \"classes_enrollments_1\" ON $10 WHERE  \"public\".\"classes\".\"is_active\" = $5  ORDER BY \"public\".\"classes\".\"created_at\" DESC  LIMIT $6 OFFSET $7 )  SELECT $11::bigint AS total_result_set, pg_catalog.count(_postgrest_t) AS page_total, coalesce(json_agg(_postgrest_t), $12) AS body, nullif(current_setting($13, $14), $15) AS response_headers, nullif(current_setting($16, $17), $18) AS response_status, $19 AS response_inserted FROM ( SELECT * FROM pgrst_source ) _postgrest_t",
+    "calls": 73276,
+    "total_time": 1959.14053199996,
+    "min_time": 0.013112,
+    "max_time": 8.579074,
+    "mean_time": 0.0267364557563186,
+    "avg_rows": 1
+  },
+  {
+    "rolname": "postgres",
+    "query": "SET idle_session_timeout='58s'",
+    "calls": 595,
+    "total_time": 1.037279,
+    "min_time": 0.001313,
+    "max_time": 0.019282,
+    "mean_time": 0.00174332605042017,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "postgres",
+    "query": "SET statement_timeout='58s'",
+    "calls": 595,
+    "total_time": 7.082312,
+    "min_time": 0.007877,
+    "max_time": 0.046647,
+    "mean_time": 0.0119030453781513,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "supabase_admin",
+    "query": "SHOW transaction_read_only",
+    "calls": 459,
+    "total_time": 10.030571,
+    "min_time": 0.010126,
+    "max_time": 2.268983,
+    "mean_time": 0.0218530958605664,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticator",
+    "query": "SET client_encoding = 'UTF8'",
+    "calls": 409,
+    "total_time": 3.807398,
+    "min_time": 0.006301,
+    "max_time": 0.172143,
+    "mean_time": 0.00930904156479217,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticator",
+    "query": "SET client_min_messages TO WARNING",
+    "calls": 409,
+    "total_time": 1.155244,
+    "min_time": 0.001789,
+    "max_time": 0.043766,
+    "mean_time": 0.00282455745721271,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticator",
+    "query": "BEGIN ISOLATION LEVEL READ COMMITTED READ ONLY",
+    "calls": 402,
+    "total_time": 5.46351,
+    "min_time": 0.009888,
+    "max_time": 0.044898,
+    "mean_time": 0.0135908208955224,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticated",
+    "query": "COMMIT",
+    "calls": 311,
+    "total_time": 0.474371,
+    "min_time": 0.000705,
+    "max_time": 0.014506,
+    "mean_time": 0.00152530868167203,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "supabase_auth_admin",
+    "query": "SELECT EXISTS (SELECT schema_migrations.* FROM schema_migrations AS schema_migrations WHERE version = $1)",
+    "calls": 270,
+    "total_time": 3.457572,
+    "min_time": 0.008,
+    "max_time": 0.107413,
+    "mean_time": 0.0128058222222222,
+    "avg_rows": 1
+  },
+  {
+    "rolname": "supabase_admin",
+    "query": "SET idle_session_timeout='58s'",
+    "calls": 269,
+    "total_time": 0.470136,
+    "min_time": 0.001305,
+    "max_time": 0.009461,
+    "mean_time": 0.00174771747211896,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "supabase_admin",
+    "query": "SET statement_timeout='58s'",
+    "calls": 269,
+    "total_time": 3.26181,
+    "min_time": 0.008772,
+    "max_time": 0.068209,
+    "mean_time": 0.012125687732342,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticated",
+    "query": "WITH pgrst_source AS ( SELECT \"public\".\"profiles\".* FROM \"public\".\"profiles\" WHERE  \"public\".\"profiles\".\"role\" = $1   LIMIT $2 OFFSET $3 ) , pgrst_source_count AS (SELECT $5  FROM \"public\".\"profiles\" WHERE  \"public\".\"profiles\".\"role\" = $4) SELECT (SELECT pg_catalog.count(*) FROM pgrst_source_count) AS total_result_set, pg_catalog.count(_postgrest_t) AS page_total, $6::text AS body, nullif(current_setting($7, $8), $9) AS response_headers, nullif(current_setting($10, $11), $12) AS response_status, $13 AS response_inserted FROM ( SELECT * FROM pgrst_source ) _postgrest_t",
+    "calls": 186,
+    "total_time": 35.043299,
+    "min_time": 0.019429,
+    "max_time": 0.977122,
+    "mean_time": 0.188404833333333,
+    "avg_rows": 1
+  },
+  {
+    "rolname": "supabase_admin",
+    "query": "set pg_stat_statements.track = none",
+    "calls": 159,
+    "total_time": 0.320959,
+    "min_time": 0.001338,
+    "max_time": 0.006712,
+    "mean_time": 0.00201861006289308,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticated",
+    "query": "WITH pgrst_source AS ( SELECT \"public\".\"profiles\".\"name\", \"public\".\"profiles\".\"email\", \"public\".\"profiles\".\"role\", \"public\".\"profiles\".\"created_at\" FROM \"public\".\"profiles\"  ORDER BY \"public\".\"profiles\".\"created_at\" DESC  LIMIT $1 OFFSET $2 )  SELECT $3::bigint AS total_result_set, pg_catalog.count(_postgrest_t) AS page_total, coalesce(json_agg(_postgrest_t), $4) AS body, nullif(current_setting($5, $6), $7) AS response_headers, nullif(current_setting($8, $9), $10) AS response_status, $11 AS response_inserted FROM ( SELECT * FROM pgrst_source ) _postgrest_t",
+    "calls": 140,
+    "total_time": 44.854042,
+    "min_time": 0.049131,
+    "max_time": 13.061512,
+    "mean_time": 0.320386014285714,
+    "avg_rows": 1
+  },
+  {
+    "rolname": "supabase_auth_admin",
+    "query": "deallocate $1",
+    "calls": 134,
+    "total_time": 0.323529,
+    "min_time": 0.000952,
+    "max_time": 0.016049,
+    "mean_time": 0.00241439552238806,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "supabase_admin",
+    "query": "BEGIN",
+    "calls": 130,
+    "total_time": 0.204057,
+    "min_time": 0.000312,
+    "max_time": 0.105255,
+    "mean_time": 0.00156966923076923,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "supabase_admin",
+    "query": "COMMIT",
+    "calls": 127,
+    "total_time": 0.113942,
+    "min_time": 0.000418,
+    "max_time": 0.001608,
+    "mean_time": 0.000897181102362205,
+    "avg_rows": 0
+  },
+  {
+    "rolname": "authenticated",
+    "query": "WITH pgrst_source AS ( SELECT \"public\".\"profiles\".* FROM \"public\".\"profiles\" WHERE  \"public\".\"profiles\".\"id\" = $1   LIMIT $2 OFFSET $3 )  SELECT $4::bigint AS total_result_set, pg_catalog.count(_postgrest_t) AS page_total, coalesce(json_agg(_postgrest_t)->$5, $6) AS body, nullif(current_setting($7, $8), $9) AS response_headers, nullif(current_setting($10, $11), $12) AS response_status, $13 AS response_inserted FROM ( SELECT * FROM pgrst_source ) _postgrest_t",
+    "calls": 118,
+    "total_time": 21.765157,
+    "min_time": 0.045251,
+    "max_time": 1.347619,
+    "mean_time": 0.184450483050847,
+    "avg_rows": 1
+  }
+]
