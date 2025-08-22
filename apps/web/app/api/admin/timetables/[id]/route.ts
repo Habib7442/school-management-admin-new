@@ -55,7 +55,7 @@ export async function GET(
         ),
         teachers:teacher_id (
           id,
-          profiles:id (
+          profiles!teachers_id_fkey (
             name,
             email
           )
@@ -197,7 +197,7 @@ export async function PUT(
         *,
         classes:class_id (name, grade_level, section),
         subjects:subject_id (name, code),
-        teachers:teacher_id (profiles:id (name)),
+        teachers:teacher_id (profiles!teachers_id_fkey (name)),
         rooms:room_id (name, room_number),
         time_periods:time_period_id (name, start_time, end_time)
       `)

@@ -208,3 +208,207 @@ export const getPasswordStrength = (password: string): {
     ...strengthMap[score as keyof typeof strengthMap]
   }
 }
+
+// Teacher-specific validation functions
+
+// Assignment validation
+export const validateAssignmentTitle = (title: string): FieldValidationResult => {
+  if (!title.trim()) {
+    return { isValid: false, error: 'Assignment title is required' }
+  }
+
+  if (title.trim().length < 3) {
+    return { isValid: false, error: 'Assignment title must be at least 3 characters long' }
+  }
+
+  if (title.trim().length > 255) {
+    return { isValid: false, error: 'Assignment title must be less than 255 characters' }
+  }
+
+  return { isValid: true }
+}
+
+export const validateAssignmentType = (type: string): FieldValidationResult => {
+  const validTypes = ['homework', 'project', 'quiz', 'test', 'lab', 'presentation', 'essay', 'research']
+
+  if (!type) {
+    return { isValid: false, error: 'Assignment type is required' }
+  }
+
+  if (!validTypes.includes(type.toLowerCase())) {
+    return { isValid: false, error: 'Please select a valid assignment type' }
+  }
+
+  return { isValid: true }
+}
+
+export const validateGrade = (grade: string | number, maxGrade: number = 100): FieldValidationResult => {
+  const numGrade = typeof grade === 'string' ? parseFloat(grade) : grade
+
+  if (isNaN(numGrade)) {
+    return { isValid: false, error: 'Grade must be a valid number' }
+  }
+
+  if (numGrade < 0) {
+    return { isValid: false, error: 'Grade cannot be negative' }
+  }
+
+  if (numGrade > maxGrade) {
+    return { isValid: false, error: `Grade cannot exceed ${maxGrade}` }
+  }
+
+  return { isValid: true }
+}
+
+export const validateDueDate = (date: string): FieldValidationResult => {
+  if (!date) {
+    return { isValid: false, error: 'Due date is required' }
+  }
+
+  const dueDate = new Date(date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (isNaN(dueDate.getTime())) {
+    return { isValid: false, error: 'Please enter a valid date' }
+  }
+
+  if (dueDate < today) {
+    return { isValid: false, error: 'Due date cannot be in the past' }
+  }
+
+  return { isValid: true }
+}
+
+// Behavioral note validation
+export const validateBehavioralNote = (title: string, description: string): ValidationResult => {
+  const errors: string[] = []
+
+  if (!title.trim()) {
+    errors.push('Note title is required')
+  } else if (title.trim().length < 3) {
+    errors.push('Note title must be at least 3 characters long')
+  } else if (title.trim().length > 255) {
+    errors.push('Note title must be less than 255 characters')
+  }
+
+  if (!description.trim()) {
+    errors.push('Note description is required')
+  } else if (description.trim().length < 10) {
+    errors.push('Note description must be at least 10 characters long')
+  } else if (description.trim().length > 1000) {
+    errors.push('Note description must be less than 1000 characters')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
+export const validateIncidentType = (type: string): FieldValidationResult => {
+  const validTypes = ['positive', 'negative', 'neutral', 'achievement', 'concern', 'improvement']
+
+  if (!type) {
+    return { isValid: false, error: 'Incident type is required' }
+  }
+
+  if (!validTypes.includes(type.toLowerCase())) {
+    return { isValid: false, error: 'Please select a valid incident type' }
+  }
+
+  return { isValid: true }
+}
+
+export const validateSeverityLevel = (level: string): FieldValidationResult => {
+  const validLevels = ['low', 'medium', 'high', 'critical']
+
+  if (!level) {
+    return { isValid: false, error: 'Severity level is required' }
+  }
+
+  if (!validLevels.includes(level.toLowerCase())) {
+    return { isValid: false, error: 'Please select a valid severity level' }
+  }
+
+  return { isValid: true }
+}
+
+// Lesson plan validation
+export const validateLessonPlan = (title: string, date: string, duration: string | number): ValidationResult => {
+  const errors: string[] = []
+
+  // Title validation
+  if (!title.trim()) {
+    errors.push('Lesson title is required')
+  } else if (title.trim().length < 3) {
+    errors.push('Lesson title must be at least 3 characters long')
+  } else if (title.trim().length > 255) {
+    errors.push('Lesson title must be less than 255 characters')
+  }
+
+  // Date validation
+  if (!date) {
+    errors.push('Lesson date is required')
+  } else {
+    const lessonDate = new Date(date)
+    if (isNaN(lessonDate.getTime())) {
+      errors.push('Please enter a valid lesson date')
+    }
+  }
+
+  // Duration validation
+  const numDuration = typeof duration === 'string' ? parseFloat(duration) : duration
+  if (isNaN(numDuration)) {
+    errors.push('Duration must be a valid number')
+  } else if (numDuration < 15) {
+    errors.push('Duration must be at least 15 minutes')
+  } else if (numDuration > 300) {
+    errors.push('Duration cannot exceed 300 minutes')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
+// Attendance validation
+export const validateAttendanceStatus = (status: string): FieldValidationResult => {
+  const validStatuses = ['present', 'absent', 'late', 'excused']
+
+  if (!status) {
+    return { isValid: false, error: 'Attendance status is required' }
+  }
+
+  if (!validStatuses.includes(status.toLowerCase())) {
+    return { isValid: false, error: 'Please select a valid attendance status' }
+  }
+
+  return { isValid: true }
+}
+
+// File validation
+export const validateFileSize = (fileSize: number, maxSizeMB: number = 10): FieldValidationResult => {
+  const maxSizeBytes = maxSizeMB * 1024 * 1024
+
+  if (fileSize > maxSizeBytes) {
+    return { isValid: false, error: `File size cannot exceed ${maxSizeMB}MB` }
+  }
+
+  return { isValid: true }
+}
+
+export const validateFileType = (fileName: string, allowedTypes: string[]): FieldValidationResult => {
+  const fileExtension = fileName.split('.').pop()?.toLowerCase()
+
+  if (!fileExtension) {
+    return { isValid: false, error: 'File must have a valid extension' }
+  }
+
+  if (!allowedTypes.includes(fileExtension)) {
+    return { isValid: false, error: `File type .${fileExtension} is not allowed. Allowed types: ${allowedTypes.join(', ')}` }
+  }
+
+  return { isValid: true }
+}

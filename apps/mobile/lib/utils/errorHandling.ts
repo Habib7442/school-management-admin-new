@@ -5,6 +5,10 @@ export interface AppError {
   code: string
   message: string
   details?: any
+  timestamp?: Date
+  severity?: 'low' | 'medium' | 'high' | 'critical'
+  category?: 'network' | 'auth' | 'validation' | 'permission' | 'data' | 'system'
+  retryable?: boolean
 }
 
 // Common error codes
@@ -15,6 +19,10 @@ export const ERROR_CODES = {
   PERMISSION_ERROR: 'PERMISSION_ERROR',
   SERVER_ERROR: 'SERVER_ERROR',
   UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+  NOT_FOUND: 'NOT_FOUND',
+  DUPLICATE_ENTRY: 'DUPLICATE_ENTRY',
+  RATE_LIMIT: 'RATE_LIMIT',
+  COMPONENT_ERROR: 'COMPONENT_ERROR',
 } as const
 
 // Error messages
@@ -243,4 +251,125 @@ export const retryOperation = async <T>(
   }
   
   throw lastError
+}
+
+// Enhanced error handler with retry capability
+export const handleApiError = (error: AppError, showAlert = true, onRetry?: () => void): void => {
+  logError(error, 'API Error')
+
+  if (showAlert) {
+    const title = getErrorTitle(error.category || 'system')
+    const message = error.message
+
+    if (error.retryable && onRetry) {
+      Alert.alert(
+        title,
+        `${message}\n\nWould you like to try again?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Retry', onPress: onRetry }
+        ]
+      )
+    } else {
+      Alert.alert(title, message, [{ text: 'OK' }])
+    }
+  }
+}
+
+const getErrorTitle = (category: AppError['category']): string => {
+  switch (category) {
+    case 'network':
+      return 'Connection Error'
+    case 'auth':
+      return 'Authentication Error'
+    case 'validation':
+      return 'Validation Error'
+    case 'permission':
+      return 'Permission Denied'
+    case 'data':
+      return 'Data Error'
+    case 'system':
+      return 'System Error'
+    default:
+      return 'Error'
+  }
+}
+
+// Global error boundary for React components
+export class ErrorBoundary {
+  static handleError(error: Error, errorInfo: any) {
+    const appError: AppError = {
+      code: ERROR_CODES.COMPONENT_ERROR,
+      message: error.message,
+      details: { error, errorInfo },
+      timestamp: new Date(),
+      severity: 'high',
+      category: 'system',
+      retryable: false
+    }
+
+    logError(appError, 'Component Error Boundary')
+
+    // Show user-friendly error message
+    Alert.alert(
+      'Something went wrong',
+      'The app encountered an unexpected error. Please restart the app if the problem persists.',
+      [{ text: 'OK' }]
+    )
+  }
+}
+
+// Network error detection
+export const isNetworkError = (error: any): boolean => {
+  const message = error?.message?.toLowerCase() || ''
+  return message.includes('network') ||
+         message.includes('timeout') ||
+         message.includes('connection') ||
+         message.includes('fetch')
+}
+
+// Validation helpers
+export const validateRequired = (value: any, fieldName: string): string | null => {
+  if (!value || (typeof value === 'string' && value.trim() === '')) {
+    return `${fieldName} is required`
+  }
+  return null
+}
+
+export const validateEmail = (email: string): string | null => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return 'Please enter a valid email address'
+  }
+  return null
+}
+
+export const validatePhone = (phone: string): string | null => {
+  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/
+  if (!phoneRegex.test(phone)) {
+    return 'Please enter a valid phone number'
+  }
+  return null
+}
+
+export const validateDate = (date: string): string | null => {
+  const dateObj = new Date(date)
+  if (isNaN(dateObj.getTime())) {
+    return 'Please enter a valid date'
+  }
+  return null
+}
+
+// Form validation helper
+export const validateForm = (data: Record<string, any>, rules: Record<string, (value: any) => string | null>): Record<string, string> => {
+  const errors: Record<string, string> = {}
+
+  for (const [field, validator] of Object.entries(rules)) {
+    const error = validator(data[field])
+    if (error) {
+      errors[field] = error
+    }
+  }
+
+  return errors
 }

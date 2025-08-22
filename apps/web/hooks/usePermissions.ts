@@ -84,7 +84,16 @@ export function usePermissions() {
       isAdmin: user.role === 'admin',
       isSubAdmin: user.role === 'sub-admin',
       isTeacher: user.role === 'teacher',
-      isStudent: user.role === 'student'
+      isStudent: user.role === 'student',
+
+      // Class teacher specific permissions
+      canUpdateClassStudents: hasPermission('students', 'update_class_students'),
+      canEnrollStudents: hasPermission('students', 'enroll_to_class'),
+      canViewClassDetails: hasPermission('students', 'view_class_details'),
+      canUpdateClassSchedule: hasPermission('timetables', 'update_class_schedule'),
+      canAssignTeachers: hasPermission('timetables', 'assign_teachers'),
+      canManageAssignedClass: hasPermission('classes', 'manage_assigned_class'),
+      canViewClassAnalytics: hasPermission('classes', 'view_class_analytics')
     }
   }, [user, hasPermission])
 

@@ -45,6 +45,34 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(teacher)" options={{ headerShown: false }} />
         <Stack.Screen name="(student)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="lesson-planning"
+          options={{
+            headerShown: true,
+            title: 'Lesson Planning',
+            headerStyle: {
+              backgroundColor: '#3b82f6',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontFamily: 'Rubik-SemiBold',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="lesson-form"
+          options={{
+            headerShown: true,
+            title: 'Lesson Plan',
+            headerStyle: {
+              backgroundColor: '#3b82f6',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontFamily: 'Rubik-SemiBold',
+            },
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

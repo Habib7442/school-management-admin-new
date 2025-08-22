@@ -232,18 +232,27 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Check if book has active transactions
-    const { data: activeTransactions } = await supabase
-      .from('borrowing_transactions')
+    // First get all book copy IDs for this book
+    const { data: bookCopies } = await supabase
+      .from('book_copies')
       .select('id')
+      .eq('book_id', params.id)
       .eq('school_id', schoolId)
-      .in('book_copy_id', 
-        supabase
-          .from('book_copies')
-          .select('id')
-          .eq('book_id', params.id)
-      )
-      .eq('status', 'active')
+
+    const bookCopyIds = bookCopies?.map(copy => copy.id) || []
+
+    // Check if book has active transactions
+    let activeTransactions = []
+    if (bookCopyIds.length > 0) {
+      const { data: transactions } = await supabase
+        .from('borrowing_transactions')
+        .select('id')
+        .eq('school_id', schoolId)
+        .in('book_copy_id', bookCopyIds)
+        .eq('status', 'active')
+
+      activeTransactions = transactions || []
+    }
 
     if (activeTransactions && activeTransactions.length > 0) {
       return NextResponse.json({ 

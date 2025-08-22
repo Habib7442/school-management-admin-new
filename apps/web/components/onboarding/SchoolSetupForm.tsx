@@ -215,17 +215,23 @@ export default function SchoolSetupForm() {
       }
       console.log('School data to insert:', schoolData)
 
-      const { data: school, error: schoolError } = await supabase
-        .from('schools')
-        .insert(schoolData)
-        .select()
-        .single()
+      // Use API endpoint to create school (bypasses RLS)
+      const response = await fetch('/api/schools', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(schoolData),
+      })
 
-      if (schoolError) {
-        console.error('School creation error:', schoolError)
-        toast.error(`Failed to create school: ${schoolError.message}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('School creation error:', errorData)
+        toast.error(`Failed to create school: ${errorData.error}`)
         return
       }
+
+      const school = await response.json()
 
       console.log('School created successfully:', school)
 
@@ -237,14 +243,18 @@ export default function SchoolSetupForm() {
       }
       console.log('Profile update data:', profileUpdateData)
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update(profileUpdateData)
-        .eq('id', user.id)
+      const profileResponse = await fetch(`/api/profiles/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileUpdateData),
+      })
 
-      if (profileError) {
-        console.error('Profile update error:', profileError)
-        toast.error(`Failed to complete onboarding: ${profileError.message}`)
+      if (!profileResponse.ok) {
+        const errorData = await profileResponse.json()
+        console.error('Profile update error:', errorData)
+        toast.error(`Failed to complete onboarding: ${errorData.error}`)
         return
       }
 

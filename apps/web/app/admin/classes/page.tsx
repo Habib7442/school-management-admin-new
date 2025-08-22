@@ -510,6 +510,14 @@ export default function ClassManagement() {
       return
     }
 
+    // Validate teacher exists if teacherId is provided
+    if (teacherId && !teachers.find(t => t.id === teacherId)) {
+      toast.error('Invalid teacher selection', {
+        description: 'The selected teacher does not exist or is not available.'
+      })
+      return
+    }
+
     const actionKey = `assign-teacher-${classId}`
     setActionLoading(prev => ({ ...prev, [actionKey]: true }))
 
@@ -519,7 +527,13 @@ export default function ClassManagement() {
         .update({ class_teacher_id: teacherId })
         .eq('id', classId)
 
-      if (error) throw error
+      if (error) {
+        // Handle specific foreign key constraint error
+        if (error.code === '23503' && error.message.includes('teachers')) {
+          throw new Error('The selected teacher is not properly registered in the system. Please contact support.')
+        }
+        throw error
+      }
 
       const teacherName = teacherId
         ? teachers.find(t => t.id === teacherId)?.name || 'Unknown Teacher'

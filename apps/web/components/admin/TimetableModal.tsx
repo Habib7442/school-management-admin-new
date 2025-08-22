@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { AlertTriangle, Clock, Users, MapPin, BookOpen } from 'lucide-react'
 
 interface TimetableModalProps {
@@ -28,6 +29,7 @@ interface FormData {
   room_id: string
   time_period_id: string
   day_of_week: string
+  selected_days: string[] // New field for multiple day selection
   notes: string
 }
 
@@ -53,6 +55,7 @@ export default function TimetableModal({
     room_id: '',
     time_period_id: '',
     day_of_week: '',
+    selected_days: [], // Initialize as empty array
     notes: ''
   })
 
@@ -142,6 +145,7 @@ export default function TimetableModal({
           room_id: timetable.rooms?.id || 'none',
           time_period_id: timetable.time_periods.id,
           day_of_week: timetable.day_of_week,
+          selected_days: [timetable.day_of_week], // Initialize with current day for edit mode
           notes: timetable.notes || ''
         })
       }
@@ -264,8 +268,11 @@ export default function TimetableModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.academic_year_id || !formData.class_id || !formData.subject_id || 
-        !formData.time_period_id || !formData.day_of_week) {
+    // For create mode, check selected_days; for edit mode, check day_of_week
+    const daysToValidate = mode === 'create' ? formData.selected_days : [formData.day_of_week]
+
+    if (!formData.academic_year_id || !formData.class_id || !formData.subject_id ||
+        !formData.time_period_id || daysToValidate.length === 0) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -278,37 +285,89 @@ export default function TimetableModal({
 
     setLoading(true)
     try {
-      const url = mode === 'edit' 
-        ? `/api/admin/timetables/${timetable.id}`
-        : '/api/admin/timetables'
-      
-      const method = mode === 'edit' ? 'PUT' : 'POST'
+      if (mode === 'edit') {
+        // Edit mode: single day update
+        const url = `/api/admin/timetables/${timetable.id}`
 
-      // Convert "none" values to null for API submission
-      const apiData = {
-        ...formData,
-        teacher_id: formData.teacher_id === 'none' ? null : formData.teacher_id,
-        room_id: formData.room_id === 'none' ? null : formData.room_id
-      }
+        const apiData = {
+          ...formData,
+          teacher_id: formData.teacher_id === 'none' ? null : formData.teacher_id,
+          room_id: formData.room_id === 'none' ? null : formData.room_id
+        }
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...apiData,
-          school_id: schoolId,
-          user_id: user?.id
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...apiData,
+            school_id: schoolId,
+            user_id: user?.id
+          })
         })
-      })
 
-      if (response.ok) {
-        toast.success(`Timetable entry ${mode === 'edit' ? 'updated' : 'created'} successfully`)
-        onSuccess()
-        onClose()
-        resetForm()
+        if (response.ok) {
+          toast.success('Timetable entry updated successfully')
+          onSuccess()
+          onClose()
+          resetForm()
+        } else {
+          const error = await response.json()
+          toast.error(error.error || 'Failed to update timetable entry')
+        }
       } else {
-        const error = await response.json()
-        toast.error(error.error || `Failed to ${mode} timetable entry`)
+        // Create mode: multiple days support
+        const daysToCreate = formData.selected_days.length > 0 ? formData.selected_days : [formData.day_of_week]
+        let successCount = 0
+        let errorCount = 0
+        const errors: string[] = []
+
+        for (const day of daysToCreate) {
+          const apiData = {
+            ...formData,
+            day_of_week: day,
+            teacher_id: formData.teacher_id === 'none' ? null : formData.teacher_id,
+            room_id: formData.room_id === 'none' ? null : formData.room_id
+          }
+
+          try {
+            const response = await fetch('/api/admin/timetables', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...apiData,
+                school_id: schoolId,
+                user_id: user?.id
+              })
+            })
+
+            if (response.ok) {
+              successCount++
+            } else {
+              const error = await response.json()
+              errors.push(`${day}: ${error.error || 'Failed to create'}`)
+              errorCount++
+            }
+          } catch (error) {
+            errors.push(`${day}: Network error`)
+            errorCount++
+          }
+        }
+
+        // Show results
+        if (successCount > 0 && errorCount === 0) {
+          toast.success(`Successfully created ${successCount} timetable ${successCount === 1 ? 'entry' : 'entries'}`)
+          onSuccess()
+          onClose()
+          resetForm()
+        } else if (successCount > 0 && errorCount > 0) {
+          toast.success(`Created ${successCount} entries, ${errorCount} failed`)
+          if (errors.length > 0) {
+            toast.error(`Errors: ${errors.join(', ')}`)
+          }
+          onSuccess() // Still refresh the data
+        } else {
+          toast.error(`Failed to create timetable entries: ${errors.join(', ')}`)
+        }
       }
     } catch (error) {
       console.error(`Error ${mode}ing timetable:`, error)
@@ -327,6 +386,7 @@ export default function TimetableModal({
       room_id: 'none',
       time_period_id: '',
       day_of_week: '',
+      selected_days: [],
       notes: ''
     })
     setConflicts([])
@@ -345,6 +405,36 @@ export default function TimetableModal({
     { value: 'friday', label: 'Friday' },
     { value: 'saturday', label: 'Saturday' }
   ]
+
+  // Handle day selection for create mode (multiple days)
+  const handleDayToggle = (dayValue: string, checked: boolean) => {
+    setFormData(prev => {
+      const newSelectedDays = checked
+        ? [...prev.selected_days, dayValue]
+        : prev.selected_days.filter(day => day !== dayValue)
+
+      return {
+        ...prev,
+        selected_days: newSelectedDays
+      }
+    })
+  }
+
+  // Select all days
+  const handleSelectAllDays = () => {
+    setFormData(prev => ({
+      ...prev,
+      selected_days: dayOptions.map(day => day.value)
+    }))
+  }
+
+  // Clear all days
+  const handleClearAllDays = () => {
+    setFormData(prev => ({
+      ...prev,
+      selected_days: []
+    }))
+  }
 
   // Show loading state if we don't have required data yet
   if (isOpen && (!schoolId || !user?.id)) {
@@ -375,7 +465,7 @@ export default function TimetableModal({
           <DialogDescription>
             {mode === 'edit'
               ? 'Update the timetable entry details below.'
-              : 'Add a new entry to the class timetable.'
+              : 'Add a new entry to the class timetable. You can select multiple days to create the same schedule across different days.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -489,21 +579,77 @@ export default function TimetableModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="day_of_week">Day *</Label>
-              <Select 
-                value={formData.day_of_week} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, day_of_week: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dayOptions.map((day) => (
-                    <SelectItem key={day.value} value={day.value}>
-                      {day.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {mode === 'create' ? (
+                // Create mode: Multiple day selection with checkboxes
+                <div className="space-y-3 p-3 border rounded-md bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-600">Select multiple days for the same schedule:</p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSelectAllDays}
+                        className="text-xs h-6 px-2"
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearAllDays}
+                        className="text-xs h-6 px-2"
+                      >
+                        Clear All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {dayOptions.map((day) => (
+                      <div key={day.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`day-${day.value}`}
+                          checked={formData.selected_days.includes(day.value)}
+                          onCheckedChange={(checked) => handleDayToggle(day.value, checked as boolean)}
+                        />
+                        <Label
+                          htmlFor={`day-${day.value}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {day.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {formData.selected_days.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500">
+                        Selected: {formData.selected_days.map(day =>
+                          dayOptions.find(d => d.value === day)?.label
+                        ).join(', ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Edit mode: Single day selection with dropdown
+                <Select
+                  value={formData.day_of_week}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, day_of_week: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dayOptions.map((day) => (
+                      <SelectItem key={day.value} value={day.value}>
+                        {day.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div>

@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { Calendar, Users, UserCheck, UserX, Search, Save, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Users, UserCheck, UserX, Search, Save, CheckCircle, XCircle, BookOpen, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
 interface Student {
   id: string
@@ -338,6 +339,45 @@ export default function AttendanceManagement() {
   return (
     <AdminLayout title="Attendance Management">
       <div className="space-y-6">
+        {/* Enhanced Attendance Registry Card */}
+        <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <BookOpen className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Enhanced Attendance Registry</h3>
+                  <p className="text-sm text-gray-600">
+                    Simple tabular attendance marking system - like a traditional school registry
+                  </p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center text-xs text-gray-500">
+                      <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                      Quick bulk actions
+                    </div>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Users className="h-3 w-3 mr-1 text-blue-500" />
+                      Real-time stats
+                    </div>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Search className="h-3 w-3 mr-1 text-purple-500" />
+                      Search & filter
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Link href="/admin/attendance/enhanced">
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  Try Enhanced Registry
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Header with Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-blue-200 bg-blue-50/50">

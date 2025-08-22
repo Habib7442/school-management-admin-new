@@ -1,5 +1,7 @@
 [
   {
+    "status": "FIXED",
+    "fixed_date": "2025-08-21",
     "name": "auth_rls_initplan",
     "title": "Auth RLS Initialization Plan",
     "level": "WARN",
@@ -8,32 +10,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.time_periods\\` has a row level security policy \\`Users can view time periods from their school\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.students\\` has a row level security policy \\`students_policy\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "time_periods",
+      "name": "students",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_time_periods_Users can view time periods from their school"
-  },
-  {
-    "name": "auth_rls_initplan",
-    "title": "Auth RLS Initialization Plan",
-    "level": "WARN",
-    "facing": "EXTERNAL",
-    "categories": [
-      "PERFORMANCE"
-    ],
-    "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.time_periods\\` has a row level security policy \\`Admins can manage time periods\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
-    "metadata": {
-      "name": "time_periods",
-      "type": "table",
-      "schema": "public"
-    },
-    "cache_key": "auth_rls_init_plan_public_time_periods_Admins can manage time periods"
+    "cache_key": "auth_rls_init_plan_public_students_students_policy"
   },
   {
     "name": "auth_rls_initplan",
@@ -44,14 +28,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.rooms\\` has a row level security policy \\`Users can view rooms from their school\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.class_teacher_assignments\\` has a row level security policy \\`class_teacher_assignments_school_access\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "rooms",
+      "name": "class_teacher_assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_rooms_Users can view rooms from their school"
+    "cache_key": "auth_rls_init_plan_public_class_teacher_assignments_class_teacher_assignments_school_access"
   },
   {
     "name": "auth_rls_initplan",
@@ -62,14 +46,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.rooms\\` has a row level security policy \\`Admins can manage rooms\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.assignments\\` has a row level security policy \\`Teachers can manage their own assignments\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "rooms",
+      "name": "assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_rooms_Admins can manage rooms"
+    "cache_key": "auth_rls_init_plan_public_assignments_Teachers can manage their own assignments"
   },
   {
     "name": "auth_rls_initplan",
@@ -80,14 +64,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetables\\` has a row level security policy \\`Users can view timetables from their school\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.assignments\\` has a row level security policy \\`Students can view published assignments for their classes\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetables",
+      "name": "assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetables_Users can view timetables from their school"
+    "cache_key": "auth_rls_init_plan_public_assignments_Students can view published assignments for their classes"
   },
   {
     "name": "auth_rls_initplan",
@@ -98,14 +82,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetables\\` has a row level security policy \\`Admins can manage timetables\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.assignment_submissions\\` has a row level security policy \\`Students can manage their own submissions\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetables",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetables_Admins can manage timetables"
+    "cache_key": "auth_rls_init_plan_public_assignment_submissions_Students can manage their own submissions"
   },
   {
     "name": "auth_rls_initplan",
@@ -116,14 +100,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetables\\` has a row level security policy \\`Teachers can view their own timetables\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.assignment_submissions\\` has a row level security policy \\`Teachers can view submissions for their assignments\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetables",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetables_Teachers can view their own timetables"
+    "cache_key": "auth_rls_init_plan_public_assignment_submissions_Teachers can view submissions for their assignments"
   },
   {
     "name": "auth_rls_initplan",
@@ -134,14 +118,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetable_templates\\` has a row level security policy \\`Users can view templates from their school\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.assignment_submissions\\` has a row level security policy \\`Teachers can grade submissions for their assignments\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetable_templates",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetable_templates_Users can view templates from their school"
+    "cache_key": "auth_rls_init_plan_public_assignment_submissions_Teachers can grade submissions for their assignments"
   },
   {
     "name": "auth_rls_initplan",
@@ -152,14 +136,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetable_templates\\` has a row level security policy \\`Admins can manage templates\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.lesson_plans\\` has a row level security policy \\`Teachers can manage their own lesson plans\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetable_templates",
+      "name": "lesson_plans",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetable_templates_Admins can manage templates"
+    "cache_key": "auth_rls_init_plan_public_lesson_plans_Teachers can manage their own lesson plans"
   },
   {
     "name": "auth_rls_initplan",
@@ -170,14 +154,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.teacher_workload\\` has a row level security policy \\`Teachers can view their own workload\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.lesson_plans\\` has a row level security policy \\`Teachers can view shared lesson plans\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "lesson_plans",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_teacher_workload_Teachers can view their own workload"
+    "cache_key": "auth_rls_init_plan_public_lesson_plans_Teachers can view shared lesson plans"
   },
   {
     "name": "auth_rls_initplan",
@@ -188,14 +172,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.teacher_workload\\` has a row level security policy \\`Admins can view all teacher workloads\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.student_behavioral_notes\\` has a row level security policy \\`Teachers can manage behavioral notes for their students\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "student_behavioral_notes",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_teacher_workload_Admins can view all teacher workloads"
+    "cache_key": "auth_rls_init_plan_public_student_behavioral_notes_Teachers can manage behavioral notes for their students"
   },
   {
     "name": "auth_rls_initplan",
@@ -206,14 +190,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.teacher_workload\\` has a row level security policy \\`Admins can manage teacher workloads\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.teacher_messages\\` has a row level security policy \\`Users can manage their own messages\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "teacher_messages",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_teacher_workload_Admins can manage teacher workloads"
+    "cache_key": "auth_rls_init_plan_public_teacher_messages_Users can manage their own messages"
   },
   {
     "name": "auth_rls_initplan",
@@ -224,14 +208,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetable_conflicts\\` has a row level security policy \\`Users can view conflicts from their school\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.teacher_resources\\` has a row level security policy \\`Teachers can manage their own resources\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetable_conflicts",
+      "name": "teacher_resources",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetable_conflicts_Users can view conflicts from their school"
+    "cache_key": "auth_rls_init_plan_public_teacher_resources_Teachers can manage their own resources"
   },
   {
     "name": "auth_rls_initplan",
@@ -242,32 +226,34 @@
       "PERFORMANCE"
     ],
     "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetable_conflicts\\` has a row level security policy \\`Admins can manage conflicts\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+    "detail": "Table \\`public.teacher_resources\\` has a row level security policy \\`Teachers can view public and shared resources\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
     "metadata": {
-      "name": "timetable_conflicts",
+      "name": "teacher_resources",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetable_conflicts_Admins can manage conflicts"
+    "cache_key": "auth_rls_init_plan_public_teacher_resources_Teachers can view public and shared resources"
   },
   {
-    "name": "auth_rls_initplan",
-    "title": "Auth RLS Initialization Plan",
+    "status": "FIXED",
+    "fixed_date": "2025-08-21",
+    "name": "multiple_permissive_policies",
+    "title": "Multiple Permissive Policies",
     "level": "WARN",
     "facing": "EXTERNAL",
     "categories": [
       "PERFORMANCE"
     ],
-    "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
-    "detail": "Table \\`public.timetable_change_logs\\` has a row level security policy \\`Users can view change logs from their school\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+    "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can view submissions for their assignments\"}\\`",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_change_logs",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "auth_rls_init_plan_public_timetable_change_logs_Users can view change logs from their school"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_anon_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -278,14 +264,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.rooms\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage rooms\",\"Users can view rooms from their school\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`anon\\` for action \\`UPDATE\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can grade submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "rooms",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_rooms_anon_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_anon_UPDATE"
   },
   {
     "name": "multiple_permissive_policies",
@@ -296,14 +282,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.rooms\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage rooms\",\"Users can view rooms from their school\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can view submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "rooms",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_rooms_authenticated_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_authenticated_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -314,14 +300,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.rooms\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage rooms\",\"Users can view rooms from their school\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`authenticated\\` for action \\`UPDATE\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can grade submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "rooms",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_rooms_authenticator_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_authenticated_UPDATE"
   },
   {
     "name": "multiple_permissive_policies",
@@ -332,14 +318,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.rooms\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage rooms\",\"Users can view rooms from their school\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can view submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "rooms",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_rooms_dashboard_user_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_authenticator_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -350,14 +336,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.teacher_workload\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage teacher workloads\",\"Admins can view all teacher workloads\",\"Teachers can view their own workload\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`authenticator\\` for action \\`UPDATE\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can grade submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_teacher_workload_anon_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_authenticator_UPDATE"
   },
   {
     "name": "multiple_permissive_policies",
@@ -368,14 +354,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.teacher_workload\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage teacher workloads\",\"Admins can view all teacher workloads\",\"Teachers can view their own workload\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can view submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_teacher_workload_authenticated_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_dashboard_user_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -386,14 +372,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.teacher_workload\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage teacher workloads\",\"Admins can view all teacher workloads\",\"Teachers can view their own workload\"}\\`",
+    "detail": "Table \\`public.assignment_submissions\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`UPDATE\\`. Policies include \\`{\"Students can manage their own submissions\",\"Teachers can grade submissions for their assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "assignment_submissions",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_teacher_workload_authenticator_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignment_submissions_dashboard_user_UPDATE"
   },
   {
     "name": "multiple_permissive_policies",
@@ -404,14 +390,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.teacher_workload\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage teacher workloads\",\"Admins can view all teacher workloads\",\"Teachers can view their own workload\"}\\`",
+    "detail": "Table \\`public.assignments\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Students can view published assignments for their classes\",\"Teachers can manage their own assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "teacher_workload",
+      "name": "assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_teacher_workload_dashboard_user_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignments_anon_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -422,14 +408,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.time_periods\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage time periods\",\"Users can view time periods from their school\"}\\`",
+    "detail": "Table \\`public.assignments\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Students can view published assignments for their classes\",\"Teachers can manage their own assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "time_periods",
+      "name": "assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_time_periods_anon_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignments_authenticated_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -440,14 +426,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.time_periods\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage time periods\",\"Users can view time periods from their school\"}\\`",
+    "detail": "Table \\`public.assignments\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Students can view published assignments for their classes\",\"Teachers can manage their own assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "time_periods",
+      "name": "assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_time_periods_authenticated_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignments_authenticator_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -458,14 +444,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.time_periods\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage time periods\",\"Users can view time periods from their school\"}\\`",
+    "detail": "Table \\`public.assignments\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Students can view published assignments for their classes\",\"Teachers can manage their own assignments\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "time_periods",
+      "name": "assignments",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_time_periods_authenticator_SELECT"
+    "cache_key": "multiple_permissive_policies_public_assignments_dashboard_user_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -476,14 +462,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.time_periods\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage time periods\",\"Users can view time periods from their school\"}\\`",
+    "detail": "Table \\`public.lesson_plans\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own lesson plans\",\"Teachers can view shared lesson plans\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "time_periods",
+      "name": "lesson_plans",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_time_periods_dashboard_user_SELECT"
+    "cache_key": "multiple_permissive_policies_public_lesson_plans_anon_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -494,14 +480,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_conflicts\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage conflicts\",\"Users can view conflicts from their school\"}\\`",
+    "detail": "Table \\`public.lesson_plans\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own lesson plans\",\"Teachers can view shared lesson plans\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_conflicts",
+      "name": "lesson_plans",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_conflicts_anon_SELECT"
+    "cache_key": "multiple_permissive_policies_public_lesson_plans_authenticated_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -512,14 +498,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_conflicts\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage conflicts\",\"Users can view conflicts from their school\"}\\`",
+    "detail": "Table \\`public.lesson_plans\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own lesson plans\",\"Teachers can view shared lesson plans\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_conflicts",
+      "name": "lesson_plans",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_conflicts_authenticated_SELECT"
+    "cache_key": "multiple_permissive_policies_public_lesson_plans_authenticator_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -530,14 +516,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_conflicts\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage conflicts\",\"Users can view conflicts from their school\"}\\`",
+    "detail": "Table \\`public.lesson_plans\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own lesson plans\",\"Teachers can view shared lesson plans\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_conflicts",
+      "name": "lesson_plans",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_conflicts_authenticator_SELECT"
+    "cache_key": "multiple_permissive_policies_public_lesson_plans_dashboard_user_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -548,14 +534,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_conflicts\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage conflicts\",\"Users can view conflicts from their school\"}\\`",
+    "detail": "Table \\`public.teacher_resources\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own resources\",\"Teachers can view public and shared resources\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_conflicts",
+      "name": "teacher_resources",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_conflicts_dashboard_user_SELECT"
+    "cache_key": "multiple_permissive_policies_public_teacher_resources_anon_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -566,14 +552,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_templates\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage templates\",\"Users can view templates from their school\"}\\`",
+    "detail": "Table \\`public.teacher_resources\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own resources\",\"Teachers can view public and shared resources\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_templates",
+      "name": "teacher_resources",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_templates_anon_SELECT"
+    "cache_key": "multiple_permissive_policies_public_teacher_resources_authenticated_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -584,14 +570,14 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_templates\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage templates\",\"Users can view templates from their school\"}\\`",
+    "detail": "Table \\`public.teacher_resources\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own resources\",\"Teachers can view public and shared resources\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_templates",
+      "name": "teacher_resources",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_templates_authenticated_SELECT"
+    "cache_key": "multiple_permissive_policies_public_teacher_resources_authenticator_SELECT"
   },
   {
     "name": "multiple_permissive_policies",
@@ -602,103 +588,13 @@
       "PERFORMANCE"
     ],
     "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_templates\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage templates\",\"Users can view templates from their school\"}\\`",
+    "detail": "Table \\`public.teacher_resources\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Teachers can manage their own resources\",\"Teachers can view public and shared resources\"}\\`",
     "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
     "metadata": {
-      "name": "timetable_templates",
+      "name": "teacher_resources",
       "type": "table",
       "schema": "public"
     },
-    "cache_key": "multiple_permissive_policies_public_timetable_templates_authenticator_SELECT"
-  },
-  {
-    "name": "multiple_permissive_policies",
-    "title": "Multiple Permissive Policies",
-    "level": "WARN",
-    "facing": "EXTERNAL",
-    "categories": [
-      "PERFORMANCE"
-    ],
-    "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetable_templates\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage templates\",\"Users can view templates from their school\"}\\`",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
-    "metadata": {
-      "name": "timetable_templates",
-      "type": "table",
-      "schema": "public"
-    },
-    "cache_key": "multiple_permissive_policies_public_timetable_templates_dashboard_user_SELECT"
-  },
-  {
-    "name": "multiple_permissive_policies",
-    "title": "Multiple Permissive Policies",
-    "level": "WARN",
-    "facing": "EXTERNAL",
-    "categories": [
-      "PERFORMANCE"
-    ],
-    "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetables\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage timetables\",\"Teachers can view their own timetables\",\"Users can view timetables from their school\"}\\`",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
-    "metadata": {
-      "name": "timetables",
-      "type": "table",
-      "schema": "public"
-    },
-    "cache_key": "multiple_permissive_policies_public_timetables_anon_SELECT"
-  },
-  {
-    "name": "multiple_permissive_policies",
-    "title": "Multiple Permissive Policies",
-    "level": "WARN",
-    "facing": "EXTERNAL",
-    "categories": [
-      "PERFORMANCE"
-    ],
-    "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetables\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage timetables\",\"Teachers can view their own timetables\",\"Users can view timetables from their school\"}\\`",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
-    "metadata": {
-      "name": "timetables",
-      "type": "table",
-      "schema": "public"
-    },
-    "cache_key": "multiple_permissive_policies_public_timetables_authenticated_SELECT"
-  },
-  {
-    "name": "multiple_permissive_policies",
-    "title": "Multiple Permissive Policies",
-    "level": "WARN",
-    "facing": "EXTERNAL",
-    "categories": [
-      "PERFORMANCE"
-    ],
-    "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetables\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage timetables\",\"Teachers can view their own timetables\",\"Users can view timetables from their school\"}\\`",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
-    "metadata": {
-      "name": "timetables",
-      "type": "table",
-      "schema": "public"
-    },
-    "cache_key": "multiple_permissive_policies_public_timetables_authenticator_SELECT"
-  },
-  {
-    "name": "multiple_permissive_policies",
-    "title": "Multiple Permissive Policies",
-    "level": "WARN",
-    "facing": "EXTERNAL",
-    "categories": [
-      "PERFORMANCE"
-    ],
-    "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
-    "detail": "Table \\`public.timetables\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can manage timetables\",\"Teachers can view their own timetables\",\"Users can view timetables from their school\"}\\`",
-    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
-    "metadata": {
-      "name": "timetables",
-      "type": "table",
-      "schema": "public"
-    },
-    "cache_key": "multiple_permissive_policies_public_timetables_dashboard_user_SELECT"
+    "cache_key": "multiple_permissive_policies_public_teacher_resources_dashboard_user_SELECT"
   }
 ]

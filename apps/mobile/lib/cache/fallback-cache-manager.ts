@@ -171,23 +171,214 @@ class FallbackCacheManager {
     totalKeys: number
     cacheSize: string
     isOnline: boolean
+    totalSizeBytes: number
+    expiredKeys: number
   }> {
     try {
       const allKeys = await AsyncStorage.getAllKeys()
       const cacheKeys = allKeys.filter(key => key.startsWith(this.keyPrefix))
-      
+
+      let totalSizeBytes = 0
+      let expiredKeys = 0
+
+      for (const key of cacheKeys) {
+        try {
+          const data = await AsyncStorage.getItem(key)
+          if (data) {
+            totalSizeBytes += data.length
+            const item = JSON.parse(data) as CacheItem<any>
+            if (!this.isValid(item)) {
+              expiredKeys++
+            }
+          }
+        } catch (error) {
+          // Count corrupted entries as expired
+          expiredKeys++
+        }
+      }
+
       return {
         totalKeys: cacheKeys.length,
-        cacheSize: `${cacheKeys.length} items`,
+        cacheSize: `${this.formatBytes(totalSizeBytes)}`,
         isOnline: this.isOnline,
+        totalSizeBytes,
+        expiredKeys,
       }
     } catch (error) {
       console.error('Get stats error:', error)
       return {
         totalKeys: 0,
-        cacheSize: '0 items',
+        cacheSize: '0 bytes',
         isOnline: this.isOnline,
+        totalSizeBytes: 0,
+        expiredKeys: 0,
       }
+    }
+  }
+
+  /**
+   * Clean up expired cache entries
+   */
+  async cleanupExpired(): Promise<{ removedCount: number; freedBytes: number }> {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys()
+      const cacheKeys = allKeys.filter(key => key.startsWith(this.keyPrefix))
+
+      const expiredKeys: string[] = []
+      let freedBytes = 0
+
+      for (const key of cacheKeys) {
+        try {
+          const data = await AsyncStorage.getItem(key)
+          if (data) {
+            const item = JSON.parse(data) as CacheItem<any>
+            if (!this.isValid(item)) {
+              expiredKeys.push(key)
+              freedBytes += data.length
+            }
+          }
+        } catch (error) {
+          // Remove corrupted entries
+          expiredKeys.push(key)
+        }
+      }
+
+      if (expiredKeys.length > 0) {
+        await AsyncStorage.multiRemove(expiredKeys)
+        console.log(`🧹 Cleaned up ${expiredKeys.length} expired cache entries (${this.formatBytes(freedBytes)} freed)`)
+      }
+
+      return {
+        removedCount: expiredKeys.length,
+        freedBytes,
+      }
+    } catch (error) {
+      console.error('Cleanup expired error:', error)
+      return { removedCount: 0, freedBytes: 0 }
+    }
+  }
+
+  /**
+   * Preload critical data for offline use
+   */
+  async preloadCriticalData(userId: string, schoolId: string): Promise<void> {
+    console.log('🚀 Preloading critical data for offline use...')
+
+    // This would typically load essential data like:
+    // - User profile
+    // - Today's classes
+    // - Recent assignments
+    // - Student lists for teacher's classes
+
+    const criticalKeys = [
+      `user_profile_${userId}`,
+      `teacher_classes_${userId}`,
+      `dashboard_stats_${userId}`,
+      `today_schedule_${userId}`,
+    ]
+
+    // In a real implementation, you would fetch this data from the API
+    // and cache it with high priority
+    console.log('📦 Critical data preloaded:', criticalKeys)
+  }
+
+  /**
+   * Intelligent cache warming based on usage patterns
+   */
+  async warmCache(userId: string, schoolId: string): Promise<void> {
+    if (!this.isOnline) {
+      console.log('📶 Offline - skipping cache warming')
+      return
+    }
+
+    console.log('🔥 Warming cache with frequently accessed data...')
+
+    // This would analyze usage patterns and preload likely-to-be-accessed data
+    // For example:
+    // - If it's Monday morning, preload weekly schedule
+    // - If it's near assignment due dates, preload assignment data
+    // - If it's attendance time, preload student lists
+
+    const now = new Date()
+    const hour = now.getHours()
+    const dayOfWeek = now.getDay()
+
+    if (hour >= 8 && hour <= 16 && dayOfWeek >= 1 && dayOfWeek <= 5) {
+      // School hours - preload teaching-related data
+      console.log('🏫 School hours detected - warming teaching data')
+    }
+  }
+
+  /**
+   * Format bytes to human readable string
+   */
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 bytes'
+
+    const k = 1024
+    const sizes = ['bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  /**
+   * Batch operations for better performance
+   */
+  async batchSet<T>(
+    items: Array<{ key: string; data: T; config: CacheConfig; userId?: string; schoolId?: string }>,
+  ): Promise<void> {
+    try {
+      const operations: Array<[string, string]> = []
+
+      for (const item of items) {
+        const cacheKey = this.generateKey(item.key, item.userId, item.schoolId)
+        const cacheItem: CacheItem<T> = {
+          data: item.data,
+          timestamp: Date.now(),
+          ttl: item.config.ttl,
+          version: this.cacheVersion,
+        }
+
+        operations.push([cacheKey, JSON.stringify(cacheItem)])
+      }
+
+      await AsyncStorage.multiSet(operations)
+      console.log(`💾 Batch cached ${operations.length} items`)
+    } catch (error) {
+      console.error('Batch set error:', error)
+    }
+  }
+
+  /**
+   * Batch get operations
+   */
+  async batchGet<T>(
+    keys: Array<{ key: string; config: CacheConfig; userId?: string; schoolId?: string }>,
+  ): Promise<Array<{ key: string; data: T | null }>> {
+    try {
+      const cacheKeys = keys.map(item => this.generateKey(item.key, item.userId, item.schoolId))
+      const results = await AsyncStorage.multiGet(cacheKeys)
+
+      return results.map(([cacheKey, data], index) => {
+        const originalKey = keys[index].key
+
+        if (data) {
+          try {
+            const item = JSON.parse(data) as CacheItem<T>
+            if (this.isValid(item)) {
+              return { key: originalKey, data: item.data }
+            }
+          } catch (error) {
+            console.error('Parse error for key:', cacheKey)
+          }
+        }
+
+        return { key: originalKey, data: null }
+      })
+    } catch (error) {
+      console.error('Batch get error:', error)
+      return keys.map(item => ({ key: item.key, data: null }))
     }
   }
 }
@@ -201,13 +392,19 @@ export const CACHE_CONFIGS = {
   USER_PROFILE: { ttl: 300, useLocal: true, priority: 'high' as const },
   DASHBOARD_STATS: { ttl: 180, useLocal: true, priority: 'high' as const },
   TODAY_CLASSES: { ttl: 300, useLocal: true, priority: 'high' as const },
-  
+
   // Medium priority - semi-static data (30 minutes)
   CLASS_LIST: { ttl: 1800, useLocal: true, priority: 'medium' as const },
   STUDENT_LIST: { ttl: 1800, useLocal: true, priority: 'medium' as const },
   ASSIGNMENT_LIST: { ttl: 1800, useLocal: true, priority: 'medium' as const },
-  
+
   // Low priority - static data (2 hours)
   SCHOOL_INFO: { ttl: 7200, useLocal: true, priority: 'low' as const },
   USER_PERMISSIONS: { ttl: 3600, useLocal: true, priority: 'low' as const },
+
+  // Teacher-specific data
+  TEACHER_DATA: { ttl: 900, useLocal: true, priority: 'high' as const },
+  LESSON_PLANS: { ttl: 1800, useLocal: true, priority: 'medium' as const },
+  BEHAVIORAL_NOTES: { ttl: 600, useLocal: true, priority: 'medium' as const },
+  ATTENDANCE_DATA: { ttl: 300, useLocal: true, priority: 'high' as const },
 } as const

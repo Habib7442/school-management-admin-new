@@ -121,13 +121,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create teacher profile' }, { status: 500 })
     }
 
+    // Create teacher record (this was missing!)
+    const { data: newTeacher, error: teacherError } = await supabase
+      .from('teachers')
+      .insert({
+        id: authData.user.id,
+        school_id: profile.school_id,
+        employee_id: `EMP${Date.now()}`, // Generate a unique employee ID
+        designation: 'Teacher',
+        joining_date: new Date().toISOString().split('T')[0], // Today's date
+        is_active: true
+      })
+      .select()
+      .single()
+
+    if (teacherError) {
+      console.error('Error creating teacher record:', teacherError)
+      return NextResponse.json({ error: 'Failed to create teacher record' }, { status: 500 })
+    }
+
+    // Verify that the teacher record was created successfully
+    const { data: verifyTeacher, error: verifyError } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('id', authData.user.id)
+      .single()
+
+    if (verifyError || !verifyTeacher) {
+      console.error('Teacher record verification failed:', verifyError)
+      return NextResponse.json({ error: 'Teacher record creation verification failed' }, { status: 500 })
+    }
+
     // Return the complete teacher data
     const teacherData = {
       id: newUser.id,
-      profiles: newProfile
+      profiles: newProfile,
+      teachers: newTeacher
     }
 
-    return NextResponse.json(teacherData, { status: 201 })
+    return NextResponse.json({
+      message: 'Teacher created successfully',
+      teacher: teacherData
+    }, { status: 201 })
   } catch (error) {
     console.error('Error in teachers POST API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -6,22 +6,24 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { 
-  BookOpen, 
-  Plus, 
-  Search, 
+import {
+  BookOpen,
+  Plus,
+  Search,
   Filter,
   Eye,
   Edit,
   Trash2,
   Download,
-  Upload,
-  BarChart3
+  BarChart3,
+  Copy,
+  Package
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -68,7 +70,13 @@ export default function BooksManagement() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [showCopiesModal, setShowCopiesModal] = useState(false)
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null)
+  const [bookToView, setBookToView] = useState<Book | null>(null)
+  const [bookToManageCopies, setBookToManageCopies] = useState<Book | null>(null)
+  const [bookCopies, setBookCopies] = useState<any[]>([])
+  const [newCopyCount, setNewCopyCount] = useState(1)
 
   useEffect(() => {
     if (user?.school_id) {
@@ -119,6 +127,71 @@ export default function BooksManagement() {
     }
   }
 
+  const fetchBookCopies = async (bookId: string) => {
+    try {
+      const response = await fetch(`/api/admin/library/books/${bookId}/copies?school_id=${user?.school_id}&user_id=${user?.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setBookCopies(data.copies || [])
+      }
+    } catch (error) {
+      console.error('Error fetching book copies:', error)
+    }
+  }
+
+  const handleAddCopies = async () => {
+    if (!bookToManageCopies || newCopyCount < 1) return
+
+    try {
+      const response = await fetch(`/api/admin/library/books/${bookToManageCopies.id}/copies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          count: newCopyCount,
+          school_id: user?.school_id,
+          user_id: user?.id
+        }),
+      })
+
+      if (response.ok) {
+        toast.success(`${newCopyCount} copies added successfully`)
+        fetchBookCopies(bookToManageCopies.id)
+        fetchBooks() // Refresh the main list
+        setNewCopyCount(1)
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to add copies')
+      }
+    } catch (error) {
+      console.error('Error adding copies:', error)
+      toast.error('Failed to add copies')
+    }
+  }
+
+  const handleDeleteCopy = async (copyId: string) => {
+    if (!bookToManageCopies) return
+
+    try {
+      const response = await fetch(`/api/admin/library/books/${bookToManageCopies.id}/copies/${copyId}?school_id=${user?.school_id}&user_id=${user?.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Copy deleted successfully')
+        fetchBookCopies(bookToManageCopies.id)
+        fetchBooks() // Refresh the main list
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to delete copy')
+      }
+    } catch (error) {
+      console.error('Error deleting copy:', error)
+      toast.error('Failed to delete copy')
+    }
+  }
+
   const handleDeleteBook = async () => {
     if (!bookToDelete) return
 
@@ -144,24 +217,24 @@ export default function BooksManagement() {
 
   const getAvailabilityBadge = (book: Book) => {
     if (book.available_copies === 0) {
-      return <Badge variant="destructive">Unavailable</Badge>
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Unavailable</Badge>
     } else if (book.available_copies <= 2) {
-      return <Badge variant="secondary">Limited</Badge>
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Limited</Badge>
     } else {
-      return <Badge variant="default">Available</Badge>
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Available</Badge>
     }
   }
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { variant: 'default' as const, label: 'Active' },
-      withdrawn: { variant: 'secondary' as const, label: 'Withdrawn' },
-      lost: { variant: 'destructive' as const, label: 'Lost' },
-      damaged: { variant: 'destructive' as const, label: 'Damaged' }
+      active: { className: 'bg-blue-100 text-blue-800 hover:bg-blue-200', label: 'Active' },
+      withdrawn: { className: 'bg-gray-100 text-gray-800 hover:bg-gray-200', label: 'Withdrawn' },
+      lost: { className: 'bg-red-100 text-red-800 hover:bg-red-200', label: 'Lost' },
+      damaged: { className: 'bg-orange-100 text-orange-800 hover:bg-orange-200', label: 'Damaged' }
     }
-    
+
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active
-    return <Badge variant={config.variant}>{config.label}</Badge>
+    return <Badge className={config.className}>{config.label}</Badge>
   }
 
   return (
@@ -176,10 +249,6 @@ export default function BooksManagement() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Import Books
-            </Button>
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export
@@ -338,18 +407,35 @@ export default function BooksManagement() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end space-x-2">
-                              <Link href={`/admin/library/books/${book.id}`}>
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </Link>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setBookToView(book)
+                                  setShowViewModal(true)
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setBookToManageCopies(book)
+                                  setShowCopiesModal(true)
+                                  fetchBookCopies(book.id)
+                                }}
+                                title="Manage Copies"
+                              >
+                                <Package className="h-4 w-4" />
+                              </Button>
                               <Link href={`/admin/library/books/${book.id}/edit`}>
                                 <Button variant="ghost" size="sm">
                                   <Edit className="h-4 w-4" />
                                 </Button>
                               </Link>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => {
                                   setBookToDelete(book)
@@ -396,6 +482,170 @@ export default function BooksManagement() {
             )}
           </CardContent>
         </Card>
+
+        {/* View Book Modal */}
+        <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{bookToView?.title}</DialogTitle>
+              <DialogDescription>
+                Book details and information
+              </DialogDescription>
+            </DialogHeader>
+            {bookToView && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-medium">Authors</Label>
+                    <p className="text-sm">{bookToView.authors?.join(', ') || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">ISBN</Label>
+                    <p className="text-sm">{bookToView.isbn || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Publisher</Label>
+                    <p className="text-sm">{bookToView.publisher || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Publication Year</Label>
+                    <p className="text-sm">{bookToView.publication_year || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Format</Label>
+                    <p className="text-sm capitalize">{bookToView.format || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Language</Label>
+                    <p className="text-sm">{bookToView.language || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Total Copies</Label>
+                    <p className="text-sm">{bookToView.total_copies}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Available Copies</Label>
+                    <p className="text-sm">{bookToView.available_copies}</p>
+                  </div>
+                </div>
+                {bookToView.description && (
+                  <div>
+                    <Label className="font-medium">Description</Label>
+                    <p className="text-sm mt-1">{bookToView.description}</p>
+                  </div>
+                )}
+                {bookToView.subjects && bookToView.subjects.length > 0 && (
+                  <div>
+                    <Label className="font-medium">Subjects</Label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {bookToView.subjects.map((subject, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {subject}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setShowViewModal(false)}>
+                    Close
+                  </Button>
+                  <Link href={`/admin/library/books/${bookToView.id}/edit`}>
+                    <Button onClick={() => setShowViewModal(false)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Book
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Manage Copies Modal */}
+        <Dialog open={showCopiesModal} onOpenChange={setShowCopiesModal}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manage Copies - {bookToManageCopies?.title}</DialogTitle>
+              <DialogDescription>
+                Add or remove book copies
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Add Copies Section */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-3">Add New Copies</h3>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="copyCount">Number of copies to add:</Label>
+                  <Input
+                    id="copyCount"
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={newCopyCount}
+                    onChange={(e) => setNewCopyCount(parseInt(e.target.value) || 1)}
+                    className="w-20"
+                  />
+                  <Button onClick={handleAddCopies}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Copies
+                  </Button>
+                </div>
+              </div>
+
+              {/* Existing Copies List */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-3">Existing Copies ({bookCopies.length})</h3>
+                {bookCopies.length === 0 ? (
+                  <p className="text-muted-foreground">No copies found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {bookCopies.map((copy) => (
+                      <div key={copy.id} className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center space-x-4">
+                          <span className="font-mono text-sm">{copy.barcode}</span>
+                          <Badge
+                            className={
+                              copy.status === 'available'
+                                ? 'bg-green-100 text-green-800'
+                                : copy.status === 'borrowed'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }
+                          >
+                            {copy.status}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            Condition: {copy.condition}
+                          </span>
+                          {copy.location && (
+                            <span className="text-sm text-muted-foreground">
+                              Location: {copy.location}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteCopy(copy.id)}
+                          disabled={copy.status === 'borrowed'}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowCopiesModal(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Confirmation Modal */}
         <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
